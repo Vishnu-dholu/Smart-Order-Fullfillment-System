@@ -1,17 +1,1 @@
-# IDE
-.idea/
-.vscode/
-
-# Java
-target/
-*.class
-
-# Go
-bin/
-*.exe
-
-# OS
-.DS_Store
-
-# Logs
-*.log
+/schema.sql
