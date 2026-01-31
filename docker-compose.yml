@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  # ---------------------------
+  # The Auth Service
+  # ---------------------------
+  auth-service:
+    build:
+      context: ./services/spring/auth_service  # Path to the source code
+      # dockerfile: ../../../build/docker/spring.Dockerfile # Path to the shared Dockerfile
+    container_name: auth-service
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_DATASOURCE_URL=${DB_URL}
+
+      - SPRING_DATASOURCE_USERNAME=${DB_USER}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASS}
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      # Pass your JWT & Google secrets here
+      - JWT_SECRETE=${JWT_SECRET}
+      - JWT_EXPIRATION=86400000
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+    networks:
+      - microservices-net
+
+networks:
+  microservices-net:
+    driver: bridge
+
+volumes:
+  postgres_auth_data:
