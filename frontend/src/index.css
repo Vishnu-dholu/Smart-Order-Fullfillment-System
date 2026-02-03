@@ -1,0 +1,11 @@
+@import "tailwindcss";
+
+/* In Tailwind 4, you can define your theme variables right here.
+  For example, setting up brand colors for your microservices:
+*/
+@theme {
+  --color-auth-primary: #4f46e5;
+  /* Spring Boot Auth Service brand */
+  --color-warehouse-accent: #00add8;
+  /* Go Warehouse Service brand */
+}
