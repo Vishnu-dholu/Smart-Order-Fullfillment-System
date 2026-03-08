@@ -43,4 +43,15 @@ public class ProductService {
 
         return savedProduct;
     }
+
+    public void syncGlobalStock(UUID productId, int newTotalStock){
+        GlobalInventory inventory = globalInventoryRepository.findByProductId(productId)
+                .orElseThrow(() -> new RuntimeException("Global inventory record not found for product: " + productId));
+
+        inventory.setTotalStock(newTotalStock);
+        globalInventoryRepository.save(inventory);
+
+        // Note: For debugging purposes, you can add a log here
+        System.out.println("Synced Global Stock for " + productId + " -> New Total: " + newTotalStock);
+    }
 }

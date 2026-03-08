@@ -8,6 +8,8 @@ import java.util.UUID;
 @Data
 public class OrderRequest {
     private String shippingAddress;
+    private Double shippingLatitude;
+    private Double shippingLongitude;
     private List<OrderItemRequest> items;
 
     @Data

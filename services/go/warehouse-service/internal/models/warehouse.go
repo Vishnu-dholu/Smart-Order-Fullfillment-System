@@ -1,8 +1,9 @@
 package models
 
 import (
-	"github.com/google/uuid"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // Maps to 'warehouses' table
@@ -10,6 +11,8 @@ type Warehouse struct {
 	WarehouseID uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primary_key" json:"warehouse_id"`
 	Name        string    `gorm:"not null" json:"name"`
 	Location    string    `gorm:"not null" json:"location"`
+	Latitude    float64   `gorm:"not null" json:"latitude"`
+	Longitude   float64   `gorm:"not null" json:"longitude"`
 	Capacity    int       `gorm:"not null" json:"capacity"`
 	// Relationship: One Warehouse has many Stock entries
 	Stocks []WarehouseStock `gorm:"foreignkey:WarehouseID" json:"stocks,omitempty"`

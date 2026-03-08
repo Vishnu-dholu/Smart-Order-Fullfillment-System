@@ -17,4 +17,7 @@ public class StockDTO {
     private String location;
 
     private int quantity;
+
+    private double latitude;
+    private double longitude;
 }

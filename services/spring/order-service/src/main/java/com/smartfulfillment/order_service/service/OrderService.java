@@ -9,6 +9,7 @@ import com.smartfulfillment.order_service.entity.Order;
 import com.smartfulfillment.order_service.entity.OrderItem;
 import com.smartfulfillment.order_service.entity.OrderStatus;
 import com.smartfulfillment.order_service.repository.OrderRepository;
+import com.smartfulfillment.order_service.util.LocationUtils;
 import feign.FeignException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -16,10 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -43,7 +41,7 @@ public class OrderService {
         order.setTotalAmount(calculateTotal(items));
 
         // Allocate Stock (Warehouse Service)
-        allocateStock(items);
+        allocateStock(items, request);
 
         // Finalize & Save
         order.setStatus(OrderStatus.CONFIRMED);
@@ -98,26 +96,47 @@ public class OrderService {
     }
 
     // Talk to Warehouse Service (the complexity was mostly here!)
-    private void allocateStock(List<OrderItem> items){
+    private void allocateStock(List<OrderItem> items, OrderRequest request){
         for (OrderItem item : items){
-            boolean success = attemptToAllocateItem(item);
+            boolean success = attemptToAllocateItem(item, request);
             if(!success){
                 throw new RuntimeException("Insufficient stock for Product ID: " + item.getProductId());
             }
         }
     }
 
-    private boolean attemptToAllocateItem(OrderItem item){
+    private boolean attemptToAllocateItem(OrderItem item, OrderRequest request){
         List<StockDTO> warehouses = warehouseClient.getStockByProduct(item.getProductId());
 
-        // try to find a warehouse with enough stock
-        for(StockDTO warehouse : warehouses) {
-            if(warehouse.getQuantity() >= item.getQuantity()){
-                if(deductStockFromWareHouse(warehouse, item)){
-                    return true;    // Success! Stop looking.
-                }
-            }
+        // Stream, filter by quantity, and sort by geographic distance
+        StockDTO closestWarehouse = warehouses.stream()
+                .filter(wh -> wh.getQuantity() >= item.getQuantity())
+                .min(Comparator.comparingDouble(wh -> {
+                    // Fallback to 0 if coordinates are missing to prevent NullPointerException
+                    double userLat = request.getShippingLatitude() != null ? request.getShippingLatitude() : 0.0;
+                    double userLng = request.getShippingLongitude() != null ? request.getShippingLongitude() : 0.0;
+
+                    return LocationUtils.calculateDistance(
+                            userLat, userLng,
+                            wh.getLatitude(), wh.getLongitude()
+                    );
+                }))
+                .orElse(null);
+
+        if(closestWarehouse != null){
+            // Calculate final distance for logging
+            double distanceKm = LocationUtils.calculateDistance(
+                    request.getShippingLatitude() != null ? request.getShippingLatitude() : 0.0,
+                    request.getShippingLongitude() != null ? request.getShippingLongitude() : 0.0,
+                    closestWarehouse.getLatitude(), closestWarehouse.getLongitude()
+            );
+
+            log.info("SMART ROUTING: Assigning Product {} to '{}' ({}). Distance: String.formate(\"%.2f\", distanceKm) km.",
+                    item.getProductId(), closestWarehouse.getWarehouseName(), closestWarehouse.getLocation());
+
+            return deductStockFromWareHouse(closestWarehouse, item);
         }
+
         return false;   // No suitable warehouse found
     }
 
