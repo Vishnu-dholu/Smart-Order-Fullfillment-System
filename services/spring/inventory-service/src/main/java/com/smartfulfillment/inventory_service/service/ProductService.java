@@ -1,5 +1,6 @@
 package com.smartfulfillment.inventory_service.service;
 
+import com.smartfulfillment.inventory_service.dto.ProductResponse;
 import com.smartfulfillment.inventory_service.entity.GlobalInventory;
 import com.smartfulfillment.inventory_service.entity.Product;
 import com.smartfulfillment.inventory_service.repository.GlobalInventoryRepository;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -18,8 +20,23 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final GlobalInventoryRepository globalInventoryRepository;
 
-    public List<Product> getAllProducts(){
-        return productRepository.findAll();
+    public List<ProductResponse> getAllProductsWithStock(){
+        List<Product> products = productRepository.findAll();
+
+        return products.stream().map(product -> {
+            // Find matching inventory, default to 0 if not found
+            GlobalInventory inventory = globalInventoryRepository.findByProductId(product.getId())
+                    .orElse(null);
+
+            return ProductResponse.builder()
+                    .id(product.getId())
+                    .name(product.getName())
+                    .description(product.getDescription())
+                    .price(product.getPrice())
+                    .totalStock(inventory != null ? inventory.getTotalStock() : 0)
+                    .reservedStock(inventory != null ? inventory.getReservedStock() : 0)
+                    .build();
+        }).collect(Collectors.toList());
     }
 
     public Product getProductById(UUID id){

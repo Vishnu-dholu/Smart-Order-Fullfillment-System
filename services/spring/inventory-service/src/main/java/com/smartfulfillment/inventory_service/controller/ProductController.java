@@ -1,5 +1,6 @@
 package com.smartfulfillment.inventory_service.controller;
 
+import com.smartfulfillment.inventory_service.dto.ProductResponse;
 import com.smartfulfillment.inventory_service.entity.Product;
 import com.smartfulfillment.inventory_service.service.ProductService;
 import lombok.RequiredArgsConstructor;
@@ -18,8 +19,8 @@ public class ProductController {
     private final ProductService productService;
 
     @GetMapping
-    public List<Product> getAllProducts(){
-        return productService.getAllProducts();
+    public ResponseEntity<List<ProductResponse>> getAllProducts() {
+        return ResponseEntity.ok(productService.getAllProductsWithStock());
     }
 
     @GetMapping("/{id}")
