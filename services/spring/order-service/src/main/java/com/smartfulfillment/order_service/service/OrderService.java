@@ -3,6 +3,7 @@ package com.smartfulfillment.order_service.service;
 import com.smartfulfillment.order_service.client.InventoryClient;
 import com.smartfulfillment.order_service.client.WarehouseClient;
 import com.smartfulfillment.order_service.dto.OrderRequest;
+import com.smartfulfillment.order_service.dto.OrderResponse;
 import com.smartfulfillment.order_service.dto.ProductDTO;
 import com.smartfulfillment.order_service.dto.StockDTO;
 import com.smartfulfillment.order_service.entity.Order;
@@ -46,6 +47,20 @@ public class OrderService {
         // Finalize & Save
         order.setStatus(OrderStatus.CONFIRMED);
         return orderRepository.save(order);
+    }
+
+    public List<OrderResponse> getUserOrders(UUID userId) {
+        List<Order> orders = orderRepository.findByUserIdOrderByCreatedAtDesc(userId);
+
+        return orders.stream().map(order -> OrderResponse.builder()
+                .orderId(order.getOrderId().toString())
+                .userId(order.getUserId().toString())
+                .status(order.getStatus().name())
+                .totalAmount(order.getTotalAmount())
+                .shippingAddress(order.getShippingAddress())
+                .createdAt(order.getCreatedAt().toString())
+                .build()
+        ).toList();
     }
 
     // --- HELPER METHODS ---

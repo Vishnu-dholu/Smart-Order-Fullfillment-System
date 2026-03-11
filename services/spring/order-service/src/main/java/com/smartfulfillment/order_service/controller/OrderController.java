@@ -1,6 +1,7 @@
 package com.smartfulfillment.order_service.controller;
 
 import com.smartfulfillment.order_service.dto.OrderRequest;
+import com.smartfulfillment.order_service.dto.OrderResponse;
 import com.smartfulfillment.order_service.entity.Order;
 import com.smartfulfillment.order_service.service.OrderService;
 import lombok.RequiredArgsConstructor;
@@ -8,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -25,5 +27,13 @@ public class OrderController {
             ){
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(orderService.placeOrder(request, userId));
+    }
+
+    @GetMapping
+    public ResponseEntity<List<OrderResponse>> getOrderHistory(
+            @RequestHeader("X-User-Id") UUID userId
+    ){
+        List<OrderResponse> orders = orderService.getUserOrders(userId);
+        return ResponseEntity.ok(orders);
     }
 }
