@@ -1,24 +1,43 @@
-import { Routes, Route } from 'react-router-dom'; // No "Router" import needed here
+import { Navigate, Route, Routes } from 'react-router-dom';
 import { Navbar } from './components/layout/Navbar';
-import { LoginPage } from './features/auth/LoginPage';
-import { LandingPage } from './features/public/LandingPage';
 import { ProtectedRoute } from './components/layout/ProtectedRoute';
+import { LoginPage } from './features/auth/LoginPage';
+import { RegisterPage } from './features/auth/RegisterPage';
+import { CustomerLayout } from './features/customer/CustomerLayout';
+import { ProductCatalog } from './features/inventory/ProductCatalog';
+import { OrderHistory } from './features/orders/OrderHistory';
+import { LandingPage } from './features/public/LandingPage';
+import { CheckoutScreen } from './features/orders/CheckoutScreen';
 
 function App() {
   return (
     <div className="min-h-screen bg-slate-50 font-sans">
-      {/* Navbar is inside App, so it's inside BrowserRouter from main.tsx */}
       <Navbar />
 
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<div className="p-10 text-center">Register Page (Coming Soon)</div>} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route
+          path="/unauthorized"
+          element={
+            <div className="p-10 text-center text-red-600 font-bold">403 - Unauthorized Access</div>
+          }
+        />
 
-        {/* Protected Routes (Placeholder for future) */}
+        {/* Protected Customer Routes */}
         <Route element={<ProtectedRoute allowedRoles={['CUSTOMER']} />}>
-          <Route path="/app/orders" element={<div>My Orders</div>} />
+          <Route element={<CustomerLayout />}>
+            {/* Default redirect: when they hit /app, send them to products */}
+            <Route path="/app" element={<Navigate to="/app/products" replace />} />
+
+            <Route path="/app/checkout" element={<CheckoutScreen />} />
+            
+            {/* The actual tab contents */}
+            <Route path="/app/products" element={<ProductCatalog />} />
+            <Route path="/app/orders" element={<OrderHistory />} />
+          </Route>
         </Route>
       </Routes>
     </div>
