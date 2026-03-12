@@ -1,11 +1,11 @@
 import { LayoutDashboard, LogOut, Package, ShoppingCart, User as UserIcon } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { useCart } from '../../store/CartContext'; // NEW: Import the cart context
+import { useCart } from '../../store/CartContext';
 
 export const Navbar = () => {
   const { user, token, logout } = useAuth();
-  const { cart } = useCart(); // NEW: Subscribe to cart state
+  const { cart } = useCart();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -17,11 +17,11 @@ export const Navbar = () => {
     if (!user) return '/';
     switch (user.role) {
       case 'ADMIN':
-        return '/admin/users';
+        return '/admin';
       case 'WAREHOUSE_MANAGER':
         return '/warehouse/inventory';
       default:
-        return '/app/products'; // Changed default to products!
+        return '/app/products';
     }
   };
 

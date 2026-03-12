@@ -1,13 +1,15 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { Navbar } from './components/layout/Navbar';
 import { ProtectedRoute } from './components/layout/ProtectedRoute';
+import { AdminDashboard } from './features/admin/AdminDashboard';
 import { LoginPage } from './features/auth/LoginPage';
 import { RegisterPage } from './features/auth/RegisterPage';
 import { CustomerLayout } from './features/customer/CustomerLayout';
 import { ProductCatalog } from './features/inventory/ProductCatalog';
+import { CheckoutScreen } from './features/orders/CheckoutScreen';
 import { OrderHistory } from './features/orders/OrderHistory';
 import { LandingPage } from './features/public/LandingPage';
-import { CheckoutScreen } from './features/orders/CheckoutScreen';
+import { WarehouseDashboard } from './features/warehouse/WarehouseDashboard';
 
 function App() {
   return (
@@ -33,11 +35,21 @@ function App() {
             <Route path="/app" element={<Navigate to="/app/products" replace />} />
 
             <Route path="/app/checkout" element={<CheckoutScreen />} />
-            
+
             {/* The actual tab contents */}
             <Route path="/app/products" element={<ProductCatalog />} />
             <Route path="/app/orders" element={<OrderHistory />} />
           </Route>
+        </Route>
+
+        {/* WAREHOUSE MANAGER ROUTES */}
+        <Route element={<ProtectedRoute allowedRoles={['WAREHOUSE_MANAGER', 'ADMIN']} />}>
+          <Route path="/warehouse/inventory" element={<WarehouseDashboard />} />
+        </Route>
+
+        {/* SYSTEM ADMIN ROUTES */}
+        <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
+          <Route path="/admin" element={<AdminDashboard />} />
         </Route>
       </Routes>
     </div>
