@@ -30,9 +30,11 @@ public class ProductService {
 
             return ProductResponse.builder()
                     .id(product.getId())
+                    .sku(product.getSku())
                     .name(product.getName())
                     .description(product.getDescription())
                     .price(product.getPrice())
+                    .imageUrl(product.getImageUrl())
                     .totalStock(inventory != null ? inventory.getTotalStock() : 0)
                     .reservedStock(inventory != null ? inventory.getReservedStock() : 0)
                     .build();
