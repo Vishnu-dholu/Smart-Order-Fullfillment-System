@@ -152,3 +152,70 @@ func GetStockByProduct(c *gin.Context) {
 
 	c.JSON(http.StatusOK, results)
 }
+
+func RequireRole(allowedRoles ...string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userRole := c.GetHeader("X-User-Role")
+
+		if userRole == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing X-User-Role header"})
+			c.Abort()
+			return
+		}
+
+		isAllowed := false
+		for _, role := range allowedRoles {
+			if userRole == role {
+				isAllowed = true
+				break
+			}
+		}
+
+		if !isAllowed {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "403 Forbidden. Warehouse Managers and Admins only."})
+			c.Abort()
+			return
+		}
+
+		// If authorized, proceed to the actual handler
+		c.Next()
+	}
+}
+
+// --- DTO ---
+type StockResponse struct {
+	WarehouseID   string  `json:"warehouseId" gorm:"column:warehouse_id"`
+	WarehouseName string  `json:"warehouseName" gorm:"column:warehouse_name"`
+	Location      string  `json:"location" gorm:"column:location"`
+	ProductID     string  `json:"productId" gorm:"column:product_id"`
+	Quantity      int64   `json:"quantity" gorm:"column:quantity"` // BIGINT maps to int64
+	Latitude      float64 `json:"latitude" gorm:"column:latitude"`
+	Longitude     float64 `json:"longitude" gorm:"column:longitude"`
+}
+
+func GetAllStock(c *gin.Context) {
+	var response []StockResponse
+
+	// Perform an SQL JOIN using GORM based exactly on your Neon schema
+	err := database.DB.Table("warehouse_stock").
+		Select("warehouse_stock.warehouse_id, warehouses.name as warehouse_name, warehouses.location, warehouse_stock.product_id, warehouse_stock.quantity, warehouses.latitude, warehouses.longitude").
+		Joins("left join warehouses on warehouses.warehouse_id = warehouse_stock.warehouse_id").
+		Scan(&response).Error
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch global stock"})
+		return
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+func GetAllWarehouses(c *gin.Context) {
+	var warehouses []models.Warehouse
+	// Fetch all warehouses from the DB
+	if err := database.DB.Find(&warehouses).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch warehouses"})
+		return
+	}
+	c.JSON(http.StatusOK, warehouses)
+}
