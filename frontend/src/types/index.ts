@@ -16,13 +16,14 @@ export interface Product {
 }
 
 // --- WAREHOUSE SERVICE (Go - Port 8084) ---
-export interface StockResult {
-  warehouse_id: string;
-  warehouse_name: string;
-  location: string;
+export interface WarehouseStock {
+  warehouseId: string;
+  warehouseName: string;
+  productId: string;
+  quantity: number;
   latitude: number;
   longitude: number;
-  quantity: number;
+  location?: string;
 }
 
 // --- ORDER SERVICE (Go - Port 8083) ---

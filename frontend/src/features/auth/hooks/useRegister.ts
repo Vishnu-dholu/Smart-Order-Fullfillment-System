@@ -39,7 +39,7 @@ export const useRegister = () => {
       setToken(token);
 
       // Redirect based on role
-      if (decoded.role === 'ADMIN') navigate('/admin/users');
+      if (decoded.role === 'ADMIN') navigate('/admin');
       else if (decoded.role === 'WAREHOUSE_MANAGER') navigate('/warehouse/inventory');
       else navigate('/app/orders');
     } catch (err: any) {

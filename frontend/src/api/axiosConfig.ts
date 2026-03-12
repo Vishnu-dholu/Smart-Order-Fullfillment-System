@@ -13,6 +13,7 @@ const createApiClient = (baseURL: string | undefined, defaultURL: string): Axios
     (config) => {
       const token = localStorage.getItem('token');
       const userId = localStorage.getItem('userId');
+      const userRole = localStorage.getItem('userRole');
 
       // Attach JWT for Spring Security / Go Auth
       if (token) {
@@ -22,6 +23,10 @@ const createApiClient = (baseURL: string | undefined, defaultURL: string): Axios
       // Attach User ID for your Java Order Service routing
       if (userId) {
         config.headers['X-User-Id'] = userId;
+      }
+
+      if (userRole) {
+        config.headers['X-User-Role'] = userRole;
       }
 
       return config;
