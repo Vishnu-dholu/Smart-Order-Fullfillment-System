@@ -35,6 +35,7 @@ public class ProductService {
                     .description(product.getDescription())
                     .price(product.getPrice())
                     .imageUrl(product.getImageUrl())
+                    .lowStockThreshold(product.getLowStockThreshold())
                     .totalStock(inventory != null ? inventory.getTotalStock() : 0)
                     .reservedStock(inventory != null ? inventory.getReservedStock() : 0)
                     .build();
@@ -65,12 +66,32 @@ public class ProductService {
 
     public void syncGlobalStock(UUID productId, int newTotalStock){
         GlobalInventory inventory = globalInventoryRepository.findByProductId(productId)
-                .orElseThrow(() -> new RuntimeException("Global inventory record not found for product: " + productId));
+                .orElse(GlobalInventory.builder()
+                        .productId(productId)
+                        .totalStock(0)
+                        .reservedStock(0)
+                        .build());
 
         inventory.setTotalStock(newTotalStock);
         globalInventoryRepository.save(inventory);
 
         // Note: For debugging purposes, you can add a log here
         System.out.println("Synced Global Stock for " + productId + " -> New Total: " + newTotalStock);
+    }
+
+    @Transactional
+    public void addGlobalStock(UUID productId, int quantityToAdd){
+        // Find the existing inventory record, or create a new one if it's the first receiving this item
+        GlobalInventory inventory = globalInventoryRepository.findByProductId(productId)
+                .orElse(GlobalInventory.builder()
+                        .productId(productId)
+                        .totalStock(0)
+                        .reservedStock(0)
+                        .build()
+                );
+
+        // Add the new physical stock to the global total
+        inventory.setTotalStock(inventory.getTotalStock() + quantityToAdd);
+        globalInventoryRepository.save(inventory);
     }
 }

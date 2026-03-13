@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -34,9 +35,17 @@ public class ProductController {
         return productService.createProduct(product);
     }
 
-    @PutMapping("/{id}/sync-stock")
-    public ResponseEntity<Void> syncStock(@PathVariable UUID id, @RequestParam int totalStock){
-        productService.syncGlobalStock(id, totalStock);
+    @PutMapping("/{productId}/sync-stock")
+    public ResponseEntity<Void> syncStockFromWarehouse(
+            @PathVariable UUID productId,
+            @RequestBody Map<String, Integer> payload
+    ) {
+        // 1. Extract the absolute total calculated by Go
+        int absoluteTotal = payload.getOrDefault("quantity", 0);
+
+        // 2. Overwrite the Java database with Go's absolute truth
+        productService.syncGlobalStock(productId, absoluteTotal);
+
         return ResponseEntity.ok().build();
     }
 }

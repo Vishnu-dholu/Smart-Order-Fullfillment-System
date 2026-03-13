@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -97,11 +99,19 @@ func UpdateStock(c *gin.Context) {
 		Select("COALESCE(SUM(quantity), 0)").
 		Scan(&totalGlobalStock)
 
-	// Make HTTP PUT request to Java Inventory Service
-	inventoryURL := fmt.Sprintf("http://localhost:8082/products/%s/sync-stock?totalStock=%d", req.ProductID, totalGlobalStock)
+	// Create a JSON payload
+	syncPayload := map[string]int{"quantity": totalGlobalStock}
+	jsonData, _ := json.Marshal(syncPayload)
 
-	reqHttp, errHttp := http.NewRequest(http.MethodPut, inventoryURL, nil)
+	// Make HTTP PUT request to Java Inventory Service
+	inventoryURL := fmt.Sprintf("http://localhost:8082/products/%s/sync-stock", req.ProductID)
+
+	reqHttp, errHttp := http.NewRequest(http.MethodPut, inventoryURL, bytes.NewBuffer(jsonData))
+
 	if errHttp == nil {
+		// Must tell Java that we are sending JSON!
+		reqHttp.Header.Set("Content-Type", "application/json")
+
 		client := &http.Client{Timeout: 5 * time.Second}
 		resp, errClient := client.Do(reqHttp)
 		if errClient != nil {

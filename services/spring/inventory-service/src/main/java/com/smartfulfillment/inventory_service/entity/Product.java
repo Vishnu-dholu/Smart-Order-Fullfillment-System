@@ -40,4 +40,7 @@ public class Product {
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "low_stock_threshold", nullable = false)
+    private Integer lowStockThreshold = 10; // Default value
 }
