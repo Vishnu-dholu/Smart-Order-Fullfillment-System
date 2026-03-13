@@ -1,5 +1,6 @@
 package com.smartfulfillment.order_service.service;
 
+import com.smartfulfillment.order_service.client.DeliveryClient;
 import com.smartfulfillment.order_service.client.InventoryClient;
 import com.smartfulfillment.order_service.client.WarehouseClient;
 import com.smartfulfillment.order_service.dto.OrderRequest;
@@ -28,6 +29,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final InventoryClient inventoryClient;
     private final WarehouseClient warehouseClient;
+    private final DeliveryClient deliveryClient;
 
     @Transactional
     public Order placeOrder(OrderRequest request, UUID userId){
@@ -146,8 +148,8 @@ public class OrderService {
                     closestWarehouse.getLatitude(), closestWarehouse.getLongitude()
             );
 
-            log.info("SMART ROUTING: Assigning Product {} to '{}' ({}). Distance: String.formate(\"%.2f\", distanceKm) km.",
-                    item.getProductId(), closestWarehouse.getWarehouseName(), closestWarehouse.getLocation());
+            log.info("SMART ROUTING: Assigning Product {} to '{}' ({}). Distance: {} km.",
+                    item.getProductId(), closestWarehouse.getWarehouseName(), closestWarehouse.getLocation(), String.format("%.2f", distanceKm));
 
             return deductStockFromWareHouse(closestWarehouse, item);
         }
@@ -171,5 +173,47 @@ public class OrderService {
             log.error("Failed to deduct stock from warehouse {}. Trying next...", warehouse.getWarehouseId());
             return false;
         }
+    }
+
+    // Fetch ALL orders (for Warehouse Managers)
+    public List<OrderResponse> getAllOrders() {
+        return orderRepository.findAll().stream().map(order -> OrderResponse.builder()
+                .orderId(order.getOrderId().toString())
+                .userId(order.getUserId().toString())
+                .status(order.getStatus().name())
+                .totalAmount(order.getTotalAmount())
+                .shippingAddress(order.getShippingAddress())
+                .createdAt(order.getCreatedAt().toString())
+                .build()
+        ).toList();
+    }
+
+    // Update the Order Status
+    @Transactional
+    public void updateOrderStatus(UUID orderId, OrderStatus newStatus) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        // Check if we are transitioning to SHIPPED
+        if(newStatus == OrderStatus.SHIPPED && order.getStatus() != OrderStatus.SHIPPED){
+            log.info("Order {} is being shipped. Notifying Delivery Service...", orderId);
+
+            // Create the payload for the Go Delivery Service
+            Map<String, String> deliveryPayload = Map.of(
+                    "order_id", orderId.toString(),
+                    "warehouse_id", UUID.randomUUID().toString()
+            );
+
+            try{
+                // Trigger the Go microservice
+                deliveryClient.createDelivery(deliveryPayload);
+                log.info("Successfully generated tracking ticker for Order: {}", orderId);
+            } catch (Exception e){
+                log.error("Failed to communicate with Delivery Service for Order: {}", orderId, e);
+            }
+        }
+
+        order.setStatus(newStatus);
+        orderRepository.save(order);
     }
 }

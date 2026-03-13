@@ -3,6 +3,7 @@ package com.smartfulfillment.order_service.controller;
 import com.smartfulfillment.order_service.dto.OrderRequest;
 import com.smartfulfillment.order_service.dto.OrderResponse;
 import com.smartfulfillment.order_service.entity.Order;
+import com.smartfulfillment.order_service.entity.OrderStatus;
 import com.smartfulfillment.order_service.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -10,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -35,5 +37,22 @@ public class OrderController {
     ){
         List<OrderResponse> orders = orderService.getUserOrders(userId);
         return ResponseEntity.ok(orders);
+    }
+
+    // Endpoint for Warehouse Managers to see all orders across the system
+    @GetMapping("/all")
+    public ResponseEntity<List<OrderResponse>> getAllSystemOrders() {
+        return ResponseEntity.ok(orderService.getAllOrders());
+    }
+
+    // Endpoint for Warehouse Managers to mark an order as SHIPPED
+    @PutMapping("/{orderId}/status")
+    public ResponseEntity<Void> updateOrderStatus(
+            @PathVariable UUID orderId,
+            @RequestBody Map<String, String> statusUpdate
+    ) {
+        OrderStatus newStatus = OrderStatus.valueOf(statusUpdate.get("status").toUpperCase());
+        orderService.updateOrderStatus(orderId, newStatus);
+        return ResponseEntity.ok().build();
     }
 }
