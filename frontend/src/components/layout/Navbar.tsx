@@ -25,7 +25,7 @@ export const Navbar = () => {
     }
   };
 
-  // NEW: Calculate the total number of items in the cart
+  // Calculate the total number of items in the cart
   const cartItemCount = cart.reduce((total, item) => total + item.cartQuantity, 0);
 
   return (
@@ -55,18 +55,20 @@ export const Navbar = () => {
                   Dashboard
                 </Link>
 
-                {/* NEW: Shopping Cart Icon with Badge */}
-                <Link
-                  to="/app/checkout"
-                  className="relative flex items-center p-2 text-slate-600 hover:text-indigo-600 transition-colors ml-2"
-                >
-                  <ShoppingCart className="h-5 w-5" />
-                  {cartItemCount > 0 && (
-                    <span className="absolute top-0 right-0 -mt-1 -mr-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm ring-2 ring-white">
-                      {cartItemCount}
-                    </span>
-                  )}
-                </Link>
+                {/* FIX: Only show the cart if the user is a CUSTOMER */}
+                {user.role === 'CUSTOMER' && (
+                  <Link
+                    to="/app/checkout"
+                    className="relative flex items-center p-2 text-slate-600 hover:text-indigo-600 transition-colors ml-2"
+                  >
+                    <ShoppingCart className="h-5 w-5" />
+                    {cartItemCount > 0 && (
+                      <span className="absolute top-0 right-0 -mt-1 -mr-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm ring-2 ring-white">
+                        {cartItemCount}
+                      </span>
+                    )}
+                  </Link>
+                )}
 
                 <div className="h-4 w-px bg-gray-300 hidden sm:block mx-2"></div>
 

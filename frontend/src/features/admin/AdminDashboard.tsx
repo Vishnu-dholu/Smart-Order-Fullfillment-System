@@ -22,6 +22,7 @@ interface Product {
   description: string;
   price: number;
   imageUrl?: string;
+  lowStockThreshold?: number;
   totalStock?: number;
   reservedStock?: number;
 }
@@ -50,6 +51,7 @@ export const AdminDashboard = () => {
     description: '',
     price: '',
     imageUrl: '',
+    lowStockThreshold: '10',
   });
 
   const [warehouseForm, setWarehouseForm] = useState({
@@ -103,7 +105,14 @@ export const AdminDashboard = () => {
 
       await inventoryApi.post('/products', payload);
       setSuccessMsg(`Successfully created product: ${productForm.name}`);
-      setProductForm({ sku: '', name: '', description: '', price: '', imageUrl: '' }); // Reset
+      setProductForm({
+        sku: '',
+        name: '',
+        description: '',
+        price: '',
+        imageUrl: '',
+        lowStockThreshold: '10',
+      }); // Reset
 
       // NEW: Invalidate the cache so the catalog tab knows it needs to fetch fresh data!
       setHasFetchedCatalog(false);
