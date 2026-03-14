@@ -2,6 +2,7 @@ package com.smartfulfillment.order_service.service;
 
 import com.smartfulfillment.order_service.client.DeliveryClient;
 import com.smartfulfillment.order_service.client.InventoryClient;
+import com.smartfulfillment.order_service.client.NotificationClient;
 import com.smartfulfillment.order_service.client.WarehouseClient;
 import com.smartfulfillment.order_service.dto.OrderRequest;
 import com.smartfulfillment.order_service.dto.OrderResponse;
@@ -30,6 +31,7 @@ public class OrderService {
     private final InventoryClient inventoryClient;
     private final WarehouseClient warehouseClient;
     private final DeliveryClient deliveryClient;
+    private final NotificationClient notificationClient;
 
     @Transactional
     public Order placeOrder(OrderRequest request, UUID userId){
@@ -48,7 +50,11 @@ public class OrderService {
 
         // Finalize & Save
         order.setStatus(OrderStatus.CONFIRMED);
-        return orderRepository.save(order);
+        Order savedOrder = orderRepository.save(order);
+
+        sendNotificationAsync(savedOrder, "ORDER_CONFIRMED", "bitbuster08@gmail.com");
+
+        return savedOrder;
     }
 
     public List<OrderResponse> getUserOrders(UUID userId) {
@@ -63,6 +69,51 @@ public class OrderService {
                 .createdAt(order.getCreatedAt().toString())
                 .build()
         ).toList();
+    }
+
+    // Fetch ALL orders (for Warehouse Managers)
+    public List<OrderResponse> getAllOrders() {
+        return orderRepository.findAll().stream().map(order -> OrderResponse.builder()
+                .orderId(order.getOrderId().toString())
+                .userId(order.getUserId().toString())
+                .status(order.getStatus().name())
+                .totalAmount(order.getTotalAmount())
+                .shippingAddress(order.getShippingAddress())
+                .createdAt(order.getCreatedAt().toString())
+                .build()
+        ).toList();
+    }
+
+    // Update the Order Status
+    @Transactional
+    public void updateOrderStatus(UUID orderId, OrderStatus newStatus) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        // Check if we are transitioning to SHIPPED
+        if(newStatus == OrderStatus.SHIPPED && order.getStatus() != OrderStatus.SHIPPED){
+            log.info("Order {} is being shipped. Notifying Delivery Service...", orderId);
+
+            // Create the payload for the Go Delivery Service
+            Map<String, String> deliveryPayload = Map.of(
+                    "order_id", orderId.toString(),
+                    "origin_warehouse", UUID.randomUUID().toString()
+            );
+
+            try{
+                // Trigger the Go microservice
+                deliveryClient.createDelivery(deliveryPayload);
+                log.info("Successfully generated tracking ticker for Order: {}", orderId);
+            } catch (Exception e){
+                log.error("Failed to communicate with Delivery Service for Order: {}", orderId, e);
+            }
+
+            // FIX: Pass the full 'order' object and the email string
+            sendNotificationAsync(order, "ORDER_SHIPPED", "bitbuster08@gmail.com");
+        }
+
+        order.setStatus(newStatus);
+        orderRepository.save(order);
     }
 
     // --- HELPER METHODS ---
@@ -175,45 +226,24 @@ public class OrderService {
         }
     }
 
-    // Fetch ALL orders (for Warehouse Managers)
-    public List<OrderResponse> getAllOrders() {
-        return orderRepository.findAll().stream().map(order -> OrderResponse.builder()
-                .orderId(order.getOrderId().toString())
-                .userId(order.getUserId().toString())
-                .status(order.getStatus().name())
-                .totalAmount(order.getTotalAmount())
-                .shippingAddress(order.getShippingAddress())
-                .createdAt(order.getCreatedAt().toString())
-                .build()
-        ).toList();
-    }
+    // UPDATED: Now takes the full Order object to extract details
+    private void sendNotificationAsync(Order order, String type, String recipientEmail){
+        new Thread(() -> {
+            try {
+                Map<String, String> payload = Map.of(
+                        "user_id", order.getUserId().toString(),
+                        "order_id", order.getOrderId() != null ? order.getOrderId().toString() : "",
+                        "type", type,
+                        "recipient_email", recipientEmail,
+                        "total_amount", order.getTotalAmount() != null ? order.getTotalAmount().toString() : "0.00",
+                        "shipping_address", order.getShippingAddress() != null ? order.getShippingAddress() : "N/A"
+                );
 
-    // Update the Order Status
-    @Transactional
-    public void updateOrderStatus(UUID orderId, OrderStatus newStatus) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
-
-        // Check if we are transitioning to SHIPPED
-        if(newStatus == OrderStatus.SHIPPED && order.getStatus() != OrderStatus.SHIPPED){
-            log.info("Order {} is being shipped. Notifying Delivery Service...", orderId);
-
-            // Create the payload for the Go Delivery Service
-            Map<String, String> deliveryPayload = Map.of(
-                    "order_id", orderId.toString(),
-                    "warehouse_id", UUID.randomUUID().toString()
-            );
-
-            try{
-                // Trigger the Go microservice
-                deliveryClient.createDelivery(deliveryPayload);
-                log.info("Successfully generated tracking ticker for Order: {}", orderId);
-            } catch (Exception e){
-                log.error("Failed to communicate with Delivery Service for Order: {}", orderId, e);
+                notificationClient.sendNotification(payload);
+                log.info("Successfully dispatched {} notification for Order: {}", type, order.getOrderId());
+            } catch (Exception e) {
+                log.error("Failed to communicate with Notification Service for Order: {}", order.getOrderId(), e);
             }
-        }
-
-        order.setStatus(newStatus);
-        orderRepository.save(order);
+        }).start();
     }
 }
