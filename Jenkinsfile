@@ -45,7 +45,7 @@ pipeline {
         stage(' Deploy to Local Server') {
             steps {
                 echo "Deploying the freshly built containers..."
-                // Drops any old containers and spins up the new ones in the background
+                sh 'docker compose down'
                 sh 'docker compose up -d'
             }
         }
