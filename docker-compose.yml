@@ -1,32 +1,82 @@
 version: '3.8'
 
 services:
-  # ---------------------------
-  # The Auth Service
-  # ---------------------------
-  auth-service:
-    build:
-      context: ./services/spring/auth_service  # Path to the source code
-      # dockerfile: ../../../build/docker/spring.Dockerfile # Path to the shared Dockerfile
-    container_name: auth-service
+  # ==========================================
+  # ⚛️ FRONTEND
+  # ==========================================
+  frontend:
+    build: ./frontend
+    container_name: smart-order-frontend
     ports:
-      - "8081:8081"
-    environment:
-      - SPRING_DATASOURCE_URL=${DB_URL}
-
-      - SPRING_DATASOURCE_USERNAME=${DB_USER}
-      - SPRING_DATASOURCE_PASSWORD=${DB_PASS}
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
-      # Pass your JWT & Google secrets here
-      - JWT_SECRETE=${JWT_SECRET}
-      - JWT_EXPIRATION=86400000
-      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - '5173:80'
     networks:
       - microservices-net
 
+  # ==========================================
+  # ☕ JAVA MICROSERVICES (Spring Boot)
+  # ==========================================
+  auth-service:
+    build: ./services/spring/auth-service
+    container_name: auth-service
+    ports:
+      - '8081:8081'
+    networks:
+      - microservices-net
+
+  inventory-service:
+    build: ./services/spring/inventory-service
+    container_name: inventory-service
+    ports:
+      - '8082:8082'
+    networks:
+      - microservices-net
+
+  order-service:
+    build: ./services/spring/order-service
+    container_name: order-service
+    ports:
+      - '8083:8083'
+    environment:
+      # Internal Docker-to-Docker communication
+      - INVENTORY_SERVICE_URL=http://inventory-service:8082
+      - WAREHOUSE_SERVICE_URL=http://warehouse-service:8084
+      - DELIVERY_SERVICE_URL=http://delivery-service:8085
+      - NOTIFICATION_SERVICE_URL=http://notification-service:8086
+    networks:
+      - microservices-net
+
+  # ==========================================
+  # 🐹 GO MICROSERVICES
+  # ==========================================
+  warehouse-service:
+    build: ./services/go/warehouse-service
+    container_name: warehouse-service
+    ports:
+      - '8084:8084'
+    environment:
+      - INVENTORY_SERVICE_URL=http://inventory-service:8082
+    networks:
+      - microservices-net
+
+  delivery-service:
+    build: ./services/go/delivery-service
+    container_name: delivery-service
+    ports:
+      - '8085:8085'
+    networks:
+      - microservices-net
+
+  notification-service:
+    build: ./services/go/notification-service
+    container_name: notification-service
+    ports:
+      - '8086:8086'
+    networks:
+      - microservices-net
+
+# ==========================================
+# 🌐 NETWORKING
+# ==========================================
 networks:
   microservices-net:
     driver: bridge
-
-volumes:
-  postgres_auth_data:
