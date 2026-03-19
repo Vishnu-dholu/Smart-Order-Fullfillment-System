@@ -53,6 +53,8 @@ services:
     container_name: warehouse-service
     ports:
       - '8084:8084'
+    env_file:
+      - ./services/go/warehouse-service/.env
     environment:
       - INVENTORY_SERVICE_URL=http://inventory-service:8082
     networks:
@@ -63,6 +65,8 @@ services:
     container_name: delivery-service
     ports:
       - '8085:8085'
+    env_file:
+      - ./services/go/delivery-service/.env
     networks:
       - microservices-net
 
@@ -71,6 +75,8 @@ services:
     container_name: notification-service
     ports:
       - '8086:8086'
+    env_file:
+      - ./services/go/notification-service/.env
     networks:
       - microservices-net
 
