@@ -1,8 +1,17 @@
+// @title Notification Service API
+// @version 1.0
+// @description API for managing notifications
+// @host localhost:8086
+// @BasePath /
 package main
 
 import (
 	"log"
 	"os"
+
+	_ "github.com/Vishnu-dholu/Smart-Order-Fullfillment-System/services/go/notification-service/docs"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -40,6 +49,9 @@ func main() {
 	// Routes
 	r.POST("/notifications", handlers.SendNotification)
 	r.GET("/notifications/:user_id", handlers.GetUserNotifications)
+
+	// Swagger API docs
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	log.Println("Notification Service running on port 8086")
 	r.Run(":8086")

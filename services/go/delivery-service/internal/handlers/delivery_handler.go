@@ -23,7 +23,15 @@ type UpdateStatusRequest struct {
 	CurrentLocation string `json:"current_location" binding:"required"`
 }
 
-// 1. Create a new delivery record (Called when Warehouse clicks "Ship Order")
+// CreateDelivery
+// @Summary      Create a new delivery record
+// @Description  Called when Warehouse clicks "Ship Order"
+// @Tags         delivery
+// @Accept       json
+// @Produce      json
+// @Param        delivery  body   CreateDeliveryRequest  true  "Delivery Request Data"
+// @Success      201  {object}  models.Shipment
+// @Router       /deliveries [post]
 func CreateDelivery(c *gin.Context) {
 	var req CreateDeliveryRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -50,7 +58,14 @@ func CreateDelivery(c *gin.Context) {
 	c.JSON(http.StatusCreated, delivery)
 }
 
-// 2. Get delivery status by Order ID (For the Customer UI)
+// GetDeliveryByOrderID
+// @Summary      Get delivery status
+// @Description  Get delivery status by Order ID (For the Customer UI)
+// @Tags         delivery
+// @Produce      json
+// @Param        orderId  path      string  true  "Order ID"
+// @Success      200  {object}  models.Shipment
+// @Router       /deliveries/order/{orderId} [get]
 func GetDeliveryByOrderID(c *gin.Context) {
 	orderID := c.Param("orderId")
 	var delivery models.Shipment
@@ -63,7 +78,16 @@ func GetDeliveryByOrderID(c *gin.Context) {
 	c.JSON(http.StatusOK, delivery)
 }
 
-// 3. Update delivery status (For the Delivery Driver / System)
+// UpdateDeliveryStatus
+// @Summary      Update delivery status
+// @Description  Update delivery status (For the Delivery Driver / System)
+// @Tags         delivery
+// @Accept       json
+// @Produce      json
+// @Param        trackingNumber  path      string               true  "Tracking Number"
+// @Param        status          body      UpdateStatusRequest  true  "Status Update Data"
+// @Success      200  {object}  models.Shipment
+// @Router       /deliveries/{trackingNumber}/status [put]
 func UpdateDeliveryStatus(c *gin.Context) {
 	trackingNumber := c.Param("trackingNumber")
 	var req UpdateStatusRequest

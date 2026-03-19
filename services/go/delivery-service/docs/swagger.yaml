@@ -1,0 +1,117 @@
+basePath: /
+definitions:
+  github_com_Vishnu-dholu_Smart-Order-Fullfillment-System_services_go_delivery-service_internal_models.Shipment:
+    properties:
+      created_at:
+        type: string
+      current_location:
+        type: string
+      estimated_delivery:
+        type: string
+      id:
+        type: string
+      order_id:
+        type: string
+      status:
+        type: string
+      tracking_number:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  internal_handlers.CreateDeliveryRequest:
+    properties:
+      order_id:
+        type: string
+      origin_warehouse:
+        type: string
+    required:
+    - order_id
+    - origin_warehouse
+    type: object
+  internal_handlers.UpdateStatusRequest:
+    properties:
+      current_location:
+        type: string
+      status:
+        type: string
+    required:
+    - current_location
+    - status
+    type: object
+host: localhost:8085
+info:
+  contact: {}
+  description: API for managing deliveries
+  title: Delivery Service API
+  version: "1.0"
+paths:
+  /deliveries:
+    post:
+      consumes:
+      - application/json
+      description: Called when Warehouse clicks "Ship Order"
+      parameters:
+      - description: Delivery Request Data
+        in: body
+        name: delivery
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.CreateDeliveryRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_Vishnu-dholu_Smart-Order-Fullfillment-System_services_go_delivery-service_internal_models.Shipment'
+      summary: Create a new delivery record
+      tags:
+      - delivery
+  /deliveries/{trackingNumber}/status:
+    put:
+      consumes:
+      - application/json
+      description: Update delivery status (For the Delivery Driver / System)
+      parameters:
+      - description: Tracking Number
+        in: path
+        name: trackingNumber
+        required: true
+        type: string
+      - description: Status Update Data
+        in: body
+        name: status
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.UpdateStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Vishnu-dholu_Smart-Order-Fullfillment-System_services_go_delivery-service_internal_models.Shipment'
+      summary: Update delivery status
+      tags:
+      - delivery
+  /deliveries/order/{orderId}:
+    get:
+      description: Get delivery status by Order ID (For the Customer UI)
+      parameters:
+      - description: Order ID
+        in: path
+        name: orderId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Vishnu-dholu_Smart-Order-Fullfillment-System_services_go_delivery-service_internal_models.Shipment'
+      summary: Get delivery status
+      tags:
+      - delivery
+swagger: "2.0"

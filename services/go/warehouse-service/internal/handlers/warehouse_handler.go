@@ -15,7 +15,15 @@ import (
 	"gorm.io/gorm"
 )
 
-// 1. Create a New Warehouse
+// CreateWarehouse
+// @Summary      Create a new warehouse
+// @Description  Creates a warehouse entry in the system
+// @Tags         warehouses
+// @Accept       json
+// @Produce      json
+// @Param        warehouse  body   models.Warehouse  true  "Warehouse Data"
+// @Success      201  {object}  models.Warehouse
+// @Router       /warehouses [post]
 func CreateWarehouse(c *gin.Context) {
 	var warehouse models.Warehouse
 	if err := c.ShouldBindJSON(&warehouse); err != nil {
@@ -39,7 +47,16 @@ type StockUpdateRequest struct {
 	Quantity  int       `json:"quantity" binding:"required"` // Can be positive (add) or negative (deduct)
 }
 
-// 2. Add/Update Stock (Inbound Logic)
+// UpdateStock
+// @Summary      Update warehouse stock
+// @Description  Add or deduct stock for a specific product in a warehouse
+// @Tags         stocks
+// @Accept       json
+// @Produce      json
+// @Param        warehouse_id  path    string              true  "Warehouse UUID"
+// @Param        stock         body    StockUpdateRequest  true  "Stock Update Request"
+// @Success      200  {object}  map[string]interface{}
+// @Router       /warehouses/{warehouse_id}/stock [post]
 func UpdateStock(c *gin.Context) {
 	warehouseIDParam := c.Param("warehouse_id")
 	warehouseUUID, err := uuid.Parse(warehouseIDParam)
@@ -131,8 +148,14 @@ func UpdateStock(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Stock updated successfully", "current_quantity": stock.Quantity, "global_quantity": totalGlobalStock})
 }
 
-// 3. Smart Fulfillment: Find Warehouses with Stock
-// This is used by the Order Service to decide where to route the order.
+// GetStockByProduct
+// @Summary      Find warehouses with stock
+// @Description  Returns a list of warehouses that have the specified product in stock
+// @Tags         stocks
+// @Produce      json
+// @Param        product_id  path      string  true  "Product UUID"
+// @Success      200  {array}   map[string]interface{}
+// @Router       /stock/{product_id} [get]
 func GetStockByProduct(c *gin.Context) {
 	productIDParam := c.Param("product_id")
 
@@ -203,6 +226,14 @@ type StockResponse struct {
 	Longitude     float64 `json:"longitude" gorm:"column:longitude"`
 }
 
+// GetAllStock
+// @Summary      Get all global stock
+// @Description  Fetch all inventory across all warehouses (Secure Route)
+// @Tags         stocks
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {array}   StockResponse
+// @Router       /stock [get]
 func GetAllStock(c *gin.Context) {
 	var response []StockResponse
 
@@ -220,6 +251,13 @@ func GetAllStock(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+// GetAllWarehouses
+// @Summary      Get all warehouses
+// @Description  Returns a list of all warehouses
+// @Tags         warehouses
+// @Produce      json
+// @Success      200  {array}   models.Warehouse
+// @Router       /warehouses [get]
 func GetAllWarehouses(c *gin.Context) {
 	var warehouses []models.Warehouse
 	// Fetch all warehouses from the DB

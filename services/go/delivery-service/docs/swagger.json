@@ -1,0 +1,178 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "API for managing deliveries",
+        "title": "Delivery Service API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "host": "localhost:8085",
+    "basePath": "/",
+    "paths": {
+        "/deliveries": {
+            "post": {
+                "description": "Called when Warehouse clicks \"Ship Order\"",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "delivery"
+                ],
+                "summary": "Create a new delivery record",
+                "parameters": [
+                    {
+                        "description": "Delivery Request Data",
+                        "name": "delivery",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_handlers.CreateDeliveryRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Vishnu-dholu_Smart-Order-Fullfillment-System_services_go_delivery-service_internal_models.Shipment"
+                        }
+                    }
+                }
+            }
+        },
+        "/deliveries/order/{orderId}": {
+            "get": {
+                "description": "Get delivery status by Order ID (For the Customer UI)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "delivery"
+                ],
+                "summary": "Get delivery status",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Order ID",
+                        "name": "orderId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Vishnu-dholu_Smart-Order-Fullfillment-System_services_go_delivery-service_internal_models.Shipment"
+                        }
+                    }
+                }
+            }
+        },
+        "/deliveries/{trackingNumber}/status": {
+            "put": {
+                "description": "Update delivery status (For the Delivery Driver / System)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "delivery"
+                ],
+                "summary": "Update delivery status",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Tracking Number",
+                        "name": "trackingNumber",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Status Update Data",
+                        "name": "status",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_handlers.UpdateStatusRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Vishnu-dholu_Smart-Order-Fullfillment-System_services_go_delivery-service_internal_models.Shipment"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "github_com_Vishnu-dholu_Smart-Order-Fullfillment-System_services_go_delivery-service_internal_models.Shipment": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "current_location": {
+                    "type": "string"
+                },
+                "estimated_delivery": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "order_id": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "tracking_number": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_handlers.CreateDeliveryRequest": {
+            "type": "object",
+            "required": [
+                "order_id",
+                "origin_warehouse"
+            ],
+            "properties": {
+                "order_id": {
+                    "type": "string"
+                },
+                "origin_warehouse": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_handlers.UpdateStatusRequest": {
+            "type": "object",
+            "required": [
+                "current_location",
+                "status"
+            ],
+            "properties": {
+                "current_location": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

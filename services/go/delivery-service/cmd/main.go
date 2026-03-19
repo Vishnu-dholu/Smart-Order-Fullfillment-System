@@ -1,8 +1,17 @@
+// @title Delivery Service API
+// @version 1.0
+// @description API for managing deliveries
+// @host localhost:8085
+// @BasePath /
 package main
 
 import (
 	"log"
 	"math/rand"
+
+	_ "github.com/Vishnu-dholu/Smart-Order-Fullfillment-System/services/go/delivery-service/docs"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"os"
 	"time"
 
@@ -46,6 +55,9 @@ func main() {
 	r.POST("/deliveries", handlers.CreateDelivery)
 	r.GET("/deliveries/order/:orderId", handlers.GetDeliveryByOrderID)
 	r.PUT("/deliveries/:trackingNumber/status", handlers.UpdateDeliveryStatus)
+
+	// Swagger API docs
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	log.Println("Delivery Service running on port 8085")
 	r.Run(":8085")

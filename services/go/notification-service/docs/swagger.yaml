@@ -1,0 +1,89 @@
+basePath: /
+definitions:
+  github_com_Vishnu-dholu_Smart-Order-Fullfillment-System_services_go_notification-service_internal_models.Notification:
+    properties:
+      notification_id:
+        type: string
+      order_id:
+        description: Pointer allows it to be NULL
+        type: string
+      sent_at:
+        type: string
+      status:
+        type: string
+      type:
+        type: string
+      user_id:
+        type: string
+    type: object
+  internal_handlers.SendNotificationRequest:
+    properties:
+      order_id:
+        type: string
+      recipient_email:
+        type: string
+      shipping_address:
+        type: string
+      total_amount:
+        type: string
+      type:
+        type: string
+      user_id:
+        type: string
+    required:
+    - recipient_email
+    - type
+    - user_id
+    type: object
+host: localhost:8086
+info:
+  contact: {}
+  description: API for managing notifications
+  title: Notification Service API
+  version: "1.0"
+paths:
+  /notifications:
+    post:
+      consumes:
+      - application/json
+      description: Send a notification email
+      parameters:
+      - description: Notification Request Data
+        in: body
+        name: notification
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.SendNotificationRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Send a Notification
+      tags:
+      - notifications
+  /notifications/{user_id}:
+    get:
+      description: Get notification history for a specific user
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_Vishnu-dholu_Smart-Order-Fullfillment-System_services_go_notification-service_internal_models.Notification'
+            type: array
+      summary: Get Notification History
+      tags:
+      - notifications
+swagger: "2.0"

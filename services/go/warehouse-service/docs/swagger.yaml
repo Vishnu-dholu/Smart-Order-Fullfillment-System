@@ -1,0 +1,194 @@
+definitions:
+  handlers.StockResponse:
+    properties:
+      latitude:
+        type: number
+      location:
+        type: string
+      longitude:
+        type: number
+      productId:
+        type: string
+      quantity:
+        description: BIGINT maps to int64
+        type: integer
+      warehouseId:
+        type: string
+      warehouseName:
+        type: string
+    type: object
+  handlers.StockUpdateRequest:
+    properties:
+      product_id:
+        type: string
+      quantity:
+        description: Can be positive (add) or negative (deduct)
+        type: integer
+    required:
+    - product_id
+    - quantity
+    type: object
+  models.Warehouse:
+    properties:
+      capacity:
+        type: integer
+      latitude:
+        type: number
+      location:
+        type: string
+      longitude:
+        type: number
+      name:
+        type: string
+      stocks:
+        description: 'Relationship: One Warehouse has many Stock entries'
+        items:
+          $ref: '#/definitions/models.WarehouseStock'
+        type: array
+      warehouse_id:
+        type: string
+    type: object
+  models.WarehouseStock:
+    properties:
+      id:
+        type: string
+      product_id:
+        description: Reference to Inventory Service
+        type: string
+      quantity:
+        type: integer
+      updated_at:
+        type: string
+      warehouse_id:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: API for managing warehouses and global stock.
+  title: Warehouse Service API
+  version: "1.0"
+paths:
+  /health:
+    get:
+      description: Check the uptime status of the service
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Health check
+      tags:
+      - health
+  /stock:
+    get:
+      description: Fetch all inventory across all warehouses (Secure Route)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handlers.StockResponse'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Get all global stock
+      tags:
+      - stocks
+  /stock/{product_id}:
+    get:
+      description: Returns a list of warehouses that have the specified product in
+        stock
+      parameters:
+      - description: Product UUID
+        in: path
+        name: product_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              additionalProperties: true
+              type: object
+            type: array
+      summary: Find warehouses with stock
+      tags:
+      - stocks
+  /warehouses:
+    get:
+      description: Returns a list of all warehouses
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Warehouse'
+            type: array
+      summary: Get all warehouses
+      tags:
+      - warehouses
+    post:
+      consumes:
+      - application/json
+      description: Creates a warehouse entry in the system
+      parameters:
+      - description: Warehouse Data
+        in: body
+        name: warehouse
+        required: true
+        schema:
+          $ref: '#/definitions/models.Warehouse'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Warehouse'
+      summary: Create a new warehouse
+      tags:
+      - warehouses
+  /warehouses/{warehouse_id}/stock:
+    post:
+      consumes:
+      - application/json
+      description: Add or deduct stock for a specific product in a warehouse
+      parameters:
+      - description: Warehouse UUID
+        in: path
+        name: warehouse_id
+        required: true
+        type: string
+      - description: Stock Update Request
+        in: body
+        name: stock
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.StockUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Update warehouse stock
+      tags:
+      - stocks
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: X-User-Role
+    type: apiKey
+swagger: "2.0"

@@ -1,0 +1,221 @@
+{
+  "main": {
+    "id": "8f8e463f05e713e7",
+    "type": "split",
+    "children": [
+      {
+        "id": "67d3100d13e9cc1f",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "baacfd72704e5368",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "New tab"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "3349bd3a0d97194f",
+    "type": "split",
+    "children": [
+      {
+        "id": "e40d5b4d025d437b",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "947ed894a26c3672",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "7460eeb714d573dc",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "f8d29c6a8748d856",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "2306767e1e180f9c",
+    "type": "split",
+    "children": [
+      {
+        "id": "051cced667794f35",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "db835004c57c1229",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "1. Auth Service Documentation.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for 1. Auth Service Documentation"
+            }
+          },
+          {
+            "id": "812c40813d7c5ed0",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "1. Auth Service Documentation.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from 1. Auth Service Documentation"
+            }
+          },
+          {
+            "id": "db1c4b26b01b412e",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "106292ea7f0ace7f",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "d13ace82d72ef107",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "1. Auth Service Documentation.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline of 1. Auth Service Documentation"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "baacfd72704e5368",
+  "lastOpenFiles": [
+    "Project staus.md",
+    "LOAD TESTING/Comparative Analysis of Java vs. Go Microservices.md",
+    "LOAD TESTING",
+    "JENKINS/Jenkins  Pipeline Integration.md",
+    "JENKINS",
+    "system-architecture/🐞 Current Structure.md",
+    "FRONT_END/UX Polish & Polyglot Data Binding.md",
+    "system-architecture/Distributed Data Synchronization & Drift.md",
+    "DELIVERY_SERVICE/Delivery Service & Cross-Language Orchestration.md",
+    "system-architecture/The Distributed Transaction Dilemma.md",
+    "DELIVERY_SERVICE",
+    "FRONT_END/Warehouse Dashboard Optimizations.md",
+    "ORDER_SERVICE/Smart Routing & Order Processing.md",
+    "FRONT_END/Customer Experience & Checkout Engine.md",
+    "WAREHOUSE_SERVICE/Infrastructure API Expansion.md",
+    "INVENTORY_SERVICE/Catalog DTO Mapping and Aggregation.md.md",
+    "FRONT_END/Admin & Warehouse Dashboards Implementation.md.md",
+    "ADMIN/Admin Control Panel.md",
+    "system-architecture",
+    "WAREHOUSE_SERVICE/Warehouse Manager Dashboard & RBAC Implementation.md",
+    "ADMIN",
+    "ORDER_SERVICE/Checkout & Order Orchestration Flow.md",
+    "INVENTORY_SERVICE/Responsive Cart Controls (Stepper UI).md",
+    "INVENTORY_SERVICE/Product Catalog & Cart.md",
+    "ORDER_SERVICE/Implementing Order History Retrieval.md",
+    "INVENTORY_SERVICE",
+    "ORDER_SERVICE/Cross-Service Inventory Synchronization.md",
+    "ORDER_SERVICE",
+    "API_CONTRACT/Order & Inventory Services.md",
+    "Polyglot Microservices ~ Smart Fulfillment System.md",
+    "FRONT_END/Frontend Documentation Smart Order Fulfillment System.md",
+    "API_CONTRACT",
+    "WAREHOUSE_SERVICE/1. Warehouse Service.md",
+    "AUTH_SERVICE/3. 🐳 Docker Infrastructure.md",
+    "WAREHOUSE_SERVICE",
+    "AUTH_SERVICE"
+  ]
+}

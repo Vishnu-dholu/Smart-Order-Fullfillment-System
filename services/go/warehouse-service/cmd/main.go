@@ -1,7 +1,19 @@
+// @title Warehouse Service API
+// @version 1.0
+// @description API for managing warehouses and global stock.
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name X-User-Role
+// @host localhost:8084
+// @BasePath /
 package main
 
 import (
 	"log"
+
+	_ "github.com/smartfulfillment/warehouse-service/docs"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -51,6 +63,9 @@ func main() {
 
 	// NEW: GET /stock -> Fetch all global inventory (Secure Route)
 	r.GET("/stock", handlers.RequireRole("WAREHOUSE_MANAGER", "ADMIN"), handlers.GetAllStock)
+
+	// Swagger API docs
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// Start Server (Cleaned up the duplicate run command)
 	log.Printf("Starting Warehouse Service on port %s...", cfg.Port)

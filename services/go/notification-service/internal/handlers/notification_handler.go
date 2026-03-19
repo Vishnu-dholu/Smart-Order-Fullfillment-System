@@ -44,7 +44,15 @@ func sendRealEmail(to string, subject string, body string) {
 	log.Printf("📧 Successfully sent real email to %s", to)
 }
 
-// 1. Send a Notification
+// SendNotification
+// @Summary      Send a Notification
+// @Description  Send a notification email
+// @Tags         notifications
+// @Accept       json
+// @Produce      json
+// @Param        notification  body   SendNotificationRequest  true  "Notification Request Data"
+// @Success      201  {object}  map[string]interface{}
+// @Router       /notifications [post]
 func SendNotification(c *gin.Context) {
 	var req SendNotificationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -100,7 +108,14 @@ func SendNotification(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": "Notification dispatched"})
 }
 
-// 2. Get Notification History
+// GetUserNotifications
+// @Summary      Get Notification History
+// @Description  Get notification history for a specific user
+// @Tags         notifications
+// @Produce      json
+// @Param        user_id  path      string  true  "User ID"
+// @Success      200  {array}  models.Notification
+// @Router       /notifications/{user_id} [get]
 func GetUserNotifications(c *gin.Context) {
 	userIDParam := c.Param("user_id")
 	userUUID, _ := uuid.Parse(userIDParam)
