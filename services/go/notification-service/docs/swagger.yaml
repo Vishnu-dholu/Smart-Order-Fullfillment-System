@@ -1,22 +1,6 @@
 basePath: /
 definitions:
-  github_com_Vishnu-dholu_Smart-Order-Fullfillment-System_services_go_notification-service_internal_models.Notification:
-    properties:
-      notification_id:
-        type: string
-      order_id:
-        description: Pointer allows it to be NULL
-        type: string
-      sent_at:
-        type: string
-      status:
-        type: string
-      type:
-        type: string
-      user_id:
-        type: string
-    type: object
-  internal_handlers.SendNotificationRequest:
+  handlers.SendNotificationRequest:
     properties:
       order_id:
         type: string
@@ -34,6 +18,22 @@ definitions:
     - recipient_email
     - type
     - user_id
+    type: object
+  models.Notification:
+    properties:
+      notification_id:
+        type: string
+      order_id:
+        description: Pointer allows it to be NULL
+        type: string
+      sent_at:
+        type: string
+      status:
+        type: string
+      type:
+        type: string
+      user_id:
+        type: string
     type: object
 host: localhost:8086
 info:
@@ -53,7 +53,7 @@ paths:
         name: notification
         required: true
         schema:
-          $ref: '#/definitions/internal_handlers.SendNotificationRequest'
+          $ref: '#/definitions/handlers.SendNotificationRequest'
       produces:
       - application/json
       responses:
@@ -81,7 +81,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/github_com_Vishnu-dholu_Smart-Order-Fullfillment-System_services_go_notification-service_internal_models.Notification'
+              $ref: '#/definitions/models.Notification'
             type: array
       summary: Get Notification History
       tags:

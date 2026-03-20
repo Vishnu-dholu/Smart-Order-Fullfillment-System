@@ -1,6 +1,26 @@
 basePath: /
 definitions:
-  github_com_Vishnu-dholu_Smart-Order-Fullfillment-System_services_go_delivery-service_internal_models.Shipment:
+  handlers.CreateDeliveryRequest:
+    properties:
+      order_id:
+        type: string
+      origin_warehouse:
+        type: string
+    required:
+    - order_id
+    - origin_warehouse
+    type: object
+  handlers.UpdateStatusRequest:
+    properties:
+      current_location:
+        type: string
+      status:
+        type: string
+    required:
+    - current_location
+    - status
+    type: object
+  models.Shipment:
     properties:
       created_at:
         type: string
@@ -18,26 +38,6 @@ definitions:
         type: string
       updated_at:
         type: string
-    type: object
-  internal_handlers.CreateDeliveryRequest:
-    properties:
-      order_id:
-        type: string
-      origin_warehouse:
-        type: string
-    required:
-    - order_id
-    - origin_warehouse
-    type: object
-  internal_handlers.UpdateStatusRequest:
-    properties:
-      current_location:
-        type: string
-      status:
-        type: string
-    required:
-    - current_location
-    - status
     type: object
 host: localhost:8085
 info:
@@ -57,14 +57,14 @@ paths:
         name: delivery
         required: true
         schema:
-          $ref: '#/definitions/internal_handlers.CreateDeliveryRequest'
+          $ref: '#/definitions/handlers.CreateDeliveryRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/github_com_Vishnu-dholu_Smart-Order-Fullfillment-System_services_go_delivery-service_internal_models.Shipment'
+            $ref: '#/definitions/models.Shipment'
       summary: Create a new delivery record
       tags:
       - delivery
@@ -84,14 +84,14 @@ paths:
         name: status
         required: true
         schema:
-          $ref: '#/definitions/internal_handlers.UpdateStatusRequest'
+          $ref: '#/definitions/handlers.UpdateStatusRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_Vishnu-dholu_Smart-Order-Fullfillment-System_services_go_delivery-service_internal_models.Shipment'
+            $ref: '#/definitions/models.Shipment'
       summary: Update delivery status
       tags:
       - delivery
@@ -110,7 +110,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_Vishnu-dholu_Smart-Order-Fullfillment-System_services_go_delivery-service_internal_models.Shipment'
+            $ref: '#/definitions/models.Shipment'
       summary: Get delivery status
       tags:
       - delivery

@@ -35,7 +35,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_handlers.SendNotificationRequest"
+                            "$ref": "#/definitions/handlers.SendNotificationRequest"
                         }
                     }
                 ],
@@ -75,7 +75,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/github_com_Vishnu-dholu_Smart-Order-Fullfillment-System_services_go_notification-service_internal_models.Notification"
+                                "$ref": "#/definitions/models.Notification"
                             }
                         }
                     }
@@ -84,31 +84,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "github_com_Vishnu-dholu_Smart-Order-Fullfillment-System_services_go_notification-service_internal_models.Notification": {
-            "type": "object",
-            "properties": {
-                "notification_id": {
-                    "type": "string"
-                },
-                "order_id": {
-                    "description": "Pointer allows it to be NULL",
-                    "type": "string"
-                },
-                "sent_at": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                },
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "internal_handlers.SendNotificationRequest": {
+        "handlers.SendNotificationRequest": {
             "type": "object",
             "required": [
                 "recipient_email",
@@ -126,6 +102,30 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "total_amount": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Notification": {
+            "type": "object",
+            "properties": {
+                "notification_id": {
+                    "type": "string"
+                },
+                "order_id": {
+                    "description": "Pointer allows it to be NULL",
+                    "type": "string"
+                },
+                "sent_at": {
+                    "type": "string"
+                },
+                "status": {
                     "type": "string"
                 },
                 "type": {

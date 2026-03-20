@@ -35,7 +35,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_handlers.CreateDeliveryRequest"
+                            "$ref": "#/definitions/handlers.CreateDeliveryRequest"
                         }
                     }
                 ],
@@ -43,7 +43,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_Vishnu-dholu_Smart-Order-Fullfillment-System_services_go_delivery-service_internal_models.Shipment"
+                            "$ref": "#/definitions/models.Shipment"
                         }
                     }
                 }
@@ -72,7 +72,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_Vishnu-dholu_Smart-Order-Fullfillment-System_services_go_delivery-service_internal_models.Shipment"
+                            "$ref": "#/definitions/models.Shipment"
                         }
                     }
                 }
@@ -105,7 +105,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_handlers.UpdateStatusRequest"
+                            "$ref": "#/definitions/handlers.UpdateStatusRequest"
                         }
                     }
                 ],
@@ -113,7 +113,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_Vishnu-dholu_Smart-Order-Fullfillment-System_services_go_delivery-service_internal_models.Shipment"
+                            "$ref": "#/definitions/models.Shipment"
                         }
                     }
                 }
@@ -121,7 +121,37 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "github_com_Vishnu-dholu_Smart-Order-Fullfillment-System_services_go_delivery-service_internal_models.Shipment": {
+        "handlers.CreateDeliveryRequest": {
+            "type": "object",
+            "required": [
+                "order_id",
+                "origin_warehouse"
+            ],
+            "properties": {
+                "order_id": {
+                    "type": "string"
+                },
+                "origin_warehouse": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.UpdateStatusRequest": {
+            "type": "object",
+            "required": [
+                "current_location",
+                "status"
+            ],
+            "properties": {
+                "current_location": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Shipment": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -146,36 +176,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "internal_handlers.CreateDeliveryRequest": {
-            "type": "object",
-            "required": [
-                "order_id",
-                "origin_warehouse"
-            ],
-            "properties": {
-                "order_id": {
-                    "type": "string"
-                },
-                "origin_warehouse": {
-                    "type": "string"
-                }
-            }
-        },
-        "internal_handlers.UpdateStatusRequest": {
-            "type": "object",
-            "required": [
-                "current_location",
-                "status"
-            ],
-            "properties": {
-                "current_location": {
-                    "type": "string"
-                },
-                "status": {
                     "type": "string"
                 }
             }
