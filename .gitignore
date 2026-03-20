@@ -18,3 +18,13 @@ bin/
 
 # Logs
 *.log
+
+# Python Virtual Environments
+venv/
+.venv/
+env/
+.env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
