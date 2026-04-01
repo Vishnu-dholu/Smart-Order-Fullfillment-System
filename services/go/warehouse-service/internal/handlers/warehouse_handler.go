@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -121,7 +123,12 @@ func UpdateStock(c *gin.Context) {
 	jsonData, _ := json.Marshal(syncPayload)
 
 	// Make HTTP PUT request to Java Inventory Service
-	inventoryURL := fmt.Sprintf("http://localhost:8082/products/%s/sync-stock", req.ProductID)
+	inventoryServiceURL := os.Getenv("INVENTORY_SERVICE_URL")
+	if inventoryServiceURL == "" {
+		inventoryServiceURL = "http://localhost:8082"
+	}
+	inventoryServiceURL = strings.TrimRight(inventoryServiceURL, "/")
+	inventoryURL := fmt.Sprintf("%s/products/%s/sync-stock", inventoryServiceURL, req.ProductID)
 
 	reqHttp, errHttp := http.NewRequest(http.MethodPut, inventoryURL, bytes.NewBuffer(jsonData))
 

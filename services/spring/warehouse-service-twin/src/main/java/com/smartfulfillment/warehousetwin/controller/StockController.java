@@ -30,7 +30,7 @@ public class StockController {
     }
 
     @GetMapping("/stock/{product_id}")
-    public ResponseEntity<?> getStockByProduct(@PathVariable("product_id") UUID productId) {
+    public ResponseEntity<?> getStockByProduct(@PathVariable("product_id") String productId) {
         try {
             List<StockLocationResponse> results = warehouseService.getStockByProduct(productId);
             return ResponseEntity.ok(results);

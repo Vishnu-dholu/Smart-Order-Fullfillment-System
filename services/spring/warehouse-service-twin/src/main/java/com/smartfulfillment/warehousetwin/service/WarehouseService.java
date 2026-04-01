@@ -4,13 +4,16 @@ import com.smartfulfillment.warehousetwin.dto.Dto.*;
 import com.smartfulfillment.warehousetwin.entity.WarehouseStock;
 import com.smartfulfillment.warehousetwin.repository.WarehouseStockRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -22,10 +25,15 @@ public class WarehouseService {
     @Autowired
     private WarehouseStockRepository warehouseStockRepository;
 
-    // Match Go behavior: hard-coded localhost inventory URL
-    private static final String INVENTORY_SERVICE_URL = "http://localhost:8082";
+    private final RestTemplate restTemplate;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    public WarehouseService() {
+        // Match Go behavior: 5s timeout for inventory sync
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(5_000);
+        factory.setReadTimeout(5_000);
+        this.restTemplate = new RestTemplate(factory);
+    }
 
     @Transactional
     public Map<String, Object> updateStock(UUID warehouseId, StockUpdateRequest req) {
@@ -42,7 +50,8 @@ public class WarehouseService {
         } else {
             int newQuantity = stock.getQuantity() + req.quantity();
             if (newQuantity < 0) {
-                throw new IllegalArgumentException("Invalid Data: Negative Stock");
+                // Go returns gorm.ErrInvalidData => "invalid data" (500 from handler)
+                throw new RuntimeException("invalid data");
             }
             stock.setQuantity(newQuantity);
             stock.setUpdatedAt(LocalDateTime.now());
@@ -54,16 +63,25 @@ public class WarehouseService {
         int totalGlobalStock = globalStockRaw == null ? 0 : globalStockRaw;
 
         // Sync with Inventory Service
-        String inventoryUrl = INVENTORY_SERVICE_URL + "/products/" + req.product_id() + "/sync-stock";
+        String baseUrl = System.getenv("INVENTORY_SERVICE_URL");
+        if (baseUrl == null || baseUrl.isBlank()) {
+            baseUrl = "http://localhost:8082";
+        }
+        baseUrl = baseUrl.replaceAll("/+$", "");
+        String inventoryUrl = baseUrl + "/products/" + req.product_id() + "/sync-stock";
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             Map<String, Integer> syncPayload = Collections.singletonMap("quantity", totalGlobalStock);
             HttpEntity<Map<String, Integer>> entity = new HttpEntity<>(syncPayload, headers);
-            
-            restTemplate.exchange(inventoryUrl, HttpMethod.PUT, entity, String.class);
-            System.out.println("✅ Synced with Inventory Service. New Global Stock: " + totalGlobalStock);
-        } catch (Exception e) {
+
+            HttpStatusCode status = restTemplate.exchange(inventoryUrl, HttpMethod.PUT, entity, String.class).getStatusCode();
+            if (status.value() == 200) {
+                System.out.println("✅ Synced with Inventory Service. New Global Stock: " + totalGlobalStock);
+            } else {
+                System.err.println("⚠️ Warning: Java responded with status code: " + status.value());
+            }
+        } catch (RestClientException e) {
             System.err.println("Warning: Failed to connect to Inventory Service: " + e.getMessage());
         }
 
@@ -74,7 +92,7 @@ public class WarehouseService {
         return response;
     }
 
-    public List<StockLocationResponse> getStockByProduct(UUID productId) {
+    public List<StockLocationResponse> getStockByProduct(String productId) {
         List<Object[]> results = warehouseStockRepository.findStockLocationByProductIdNative(productId);
         return results.stream().map(row -> new StockLocationResponse(
                 UUID.fromString((String) row[0]),
