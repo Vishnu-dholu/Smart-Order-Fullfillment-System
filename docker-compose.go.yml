@@ -39,28 +39,11 @@ services:
     environment:
       # Internal Docker-to-Docker communication
       - INVENTORY_SERVICE_URL=http://inventory-service:8082
-      # Default points to Go service; override via env when running compose.
-      # Go:     WAREHOUSE_SERVICE_URL=http://warehouse-service:8084
-      # Spring:  WAREHOUSE_SERVICE_URL=http://warehouse-service-twin:9084
-      - WAREHOUSE_SERVICE_URL=${WAREHOUSE_SERVICE_URL:-http://warehouse-service:8084}
+      - WAREHOUSE_SERVICE_URL=http://warehouse-service:8084
       - DELIVERY_SERVICE_URL=http://delivery-service:8085
       - NOTIFICATION_SERVICE_URL=http://notification-service:8086
     networks:
       - microservices-net
-
-  warehouse-service-twin:
-    build: ./services/spring/warehouse-service-twin
-    container_name: warehouse-service-twin
-    ports:
-      - '8084:9084'
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://ep-round-frost-a10slzy6-pooler.ap-southeast-1.aws.neon.tech/warehouse_db?sslmode=require
-      - SPRING_DATASOURCE_USERNAME=warehouse_admin
-      - SPRING_DATASOURCE_PASSWORD=warehouse_admin(123)
-      - INVENTORY_SERVICE_URL=http://inventory-service:8082
-    networks:
-      - microservices-net
-    profiles: ["spring"]
 
   # ==========================================
   # 🐹 GO MICROSERVICES
