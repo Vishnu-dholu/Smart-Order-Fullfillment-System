@@ -7,6 +7,7 @@ package main
 
 import (
 	"log"
+	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -33,11 +34,10 @@ func main() {
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowOrigins = []string{"http://localhost:5173"}
 	corsConfig.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
-	corsConfig.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization", "X-User-Id", "X-User-Role"}
+	corsConfig.AllowHeaders = []string{"authorization"}
 	corsConfig.AllowCredentials = true
+	corsConfig.MaxAge = 1800 * time.Second
 	r.Use(cors.New(corsConfig))
-
-	r.GET("/ping", handlers.Ping)
 
 	r.GET("/products", handlers.GetAllProducts)
 	r.GET("/products/:id", handlers.GetProductByID)
