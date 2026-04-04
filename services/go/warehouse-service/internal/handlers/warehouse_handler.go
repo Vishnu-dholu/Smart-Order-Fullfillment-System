@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -62,6 +64,9 @@ func UpdateStock(c *gin.Context) {
 		result := tx.Where("warehouse_id = ? AND product_id = ?", warehouseUUID, req.ProductID).First(&stock)
 
 		if result.Error == gorm.ErrRecordNotFound {
+			if req.Quantity < 0 {
+				return gorm.ErrInvalidData
+			}
 			// Create new stock entry
 			stock = models.WarehouseStock{
 				WarehouseID: warehouseUUID,
@@ -87,6 +92,10 @@ func UpdateStock(c *gin.Context) {
 	})
 
 	if err != nil {
+		if err == gorm.ErrInvalidData {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Cannot result in negative stock"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update stock: " + err.Error()})
 		return
 	}
@@ -104,7 +113,13 @@ func UpdateStock(c *gin.Context) {
 	jsonData, _ := json.Marshal(syncPayload)
 
 	// Make HTTP PUT request to Java Inventory Service
-	inventoryURL := fmt.Sprintf("http://localhost:8082/products/%s/sync-stock", req.ProductID)
+	//inventoryURL := fmt.Sprintf("http://localhost:8082/products/%s/sync-stock", req.ProductID)
+	inventoryServiceURL := os.Getenv("INVENTORY_SERVICE_URL")
+	if inventoryServiceURL == "" {
+		inventoryServiceURL = "http://localhost:8082"
+	}
+	inventoryServiceURL = strings.TrimRight(inventoryServiceURL, "/")
+	inventoryURL := fmt.Sprintf("%s/products/%s/sync-stock", inventoryServiceURL, req.ProductID)
 
 	reqHttp, errHttp := http.NewRequest(http.MethodPut, inventoryURL, bytes.NewBuffer(jsonData))
 
@@ -198,7 +213,7 @@ type StockResponse struct {
 	WarehouseName string  `json:"warehouseName" gorm:"column:warehouse_name"`
 	Location      string  `json:"location" gorm:"column:location"`
 	ProductID     string  `json:"productId" gorm:"column:product_id"`
-	Quantity      int64   `json:"quantity" gorm:"column:quantity"` // BIGINT maps to int64
+	Quantity      int64   `json:"quantity" gorm:"column:quantity"`
 	Latitude      float64 `json:"latitude" gorm:"column:latitude"`
 	Longitude     float64 `json:"longitude" gorm:"column:longitude"`
 }

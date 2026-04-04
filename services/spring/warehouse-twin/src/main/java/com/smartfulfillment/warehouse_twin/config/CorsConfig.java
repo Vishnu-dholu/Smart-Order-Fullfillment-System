@@ -1,0 +1,18 @@
+package com.smartfulfillment.warehouse_twin.config;
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+@Configuration
+public class CorsConfig implements WebMvcConfigurer {
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+                .allowedOrigins("http://localhost:5173")
+                .allowedMethods("GET", "POST", "OPTIONS", "PUT", "PATCH", "DELETE")
+                .allowedHeaders("Origin", "Content-Type", "Accept", "Authorization", "X-User-Id", "X-User-Role")
+                .allowCredentials(true);
+    }
+}

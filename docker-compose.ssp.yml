@@ -1,0 +1,118 @@
+version: '3.8'
+
+networks:
+  ssp-net:
+    driver: bridge
+
+services:
+  # ==========================================
+  # THE CONTROL GROUP (Original Services)
+  # ==========================================
+  inventory-java:
+    build:
+      context: ./services/spring/inventory-service
+    container_name: ssp-inventory-java
+    ports:
+      - '8082:8082'
+    networks:
+      - ssp-net
+    environment:
+      - PORT=8082
+
+  order-java:
+    build:
+      context: ./services/spring/order-service
+    container_name: ssp-order-java
+    ports:
+      - '8083:8083'
+    networks:
+      - ssp-net
+    environment:
+      - PORT=8083
+      - INVENTORY_SERVICE_URL=http://inventory-java:8082
+      - WAREHOUSE_SERVICE_URL=http://warehouse-go:8084
+      - NOTIFICATION_SERVICE_URL=http://notification-service:8086
+
+  warehouse-go:
+    build:
+      context: ./services/go/warehouse-service
+    container_name: ssp-warehouse-go
+    ports:
+      - '8084:8084'
+    networks:
+      - ssp-net
+    env_file:
+      - ./services/go/warehouse-service/.env
+    environment:
+      - PORT=8084
+
+  # ==========================================
+  # THE TEST GROUP (The Twins)
+  # ==========================================
+  inventory-go-twin:
+    build:
+      context: ./services/go/inventory-twin
+    container_name: ssp-inventory-go-twin
+    ports:
+      - '9082:9082'
+    networks:
+      - ssp-net
+    env_file:
+      - ./services/go/inventory-twin/.env
+    environment:
+      - PORT=9082
+
+  order-go-twin:
+    build:
+      context: ./services/go/order-twin
+    container_name: ssp-order-go-twin
+    ports:
+      - '9083:9083'
+    networks:
+      - ssp-net
+    env_file:
+      - ./services/go/order-twin/.env
+    environment:
+      - PORT=9083
+      - INVENTORY_SERVICE_URL=http://inventory-go-twin:9082
+      - WAREHOUSE_SERVICE_URL=http://warehouse-java-twin:9084
+
+  warehouse-java-twin:
+    build:
+      context: ./services/spring/warehouse-twin
+    container_name: ssp-warehouse-java-twin
+    ports:
+      - '9084:9084'
+    networks:
+      - ssp-net
+    environment:
+      - PORT=9084
+      - INVENTORY_SERVICE_URL=http://inventory-go-twin:9082
+
+  # ==========================================
+  # OBSERVABILITY STACK (The Observers)
+  # ==========================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: ssp-prometheus
+    ports:
+      - '9090:9090'
+    volumes:
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - ssp-net
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.retention.time=15d'
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: ssp-grafana
+    ports:
+      - '3000:3000'
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    networks:
+      - ssp-net
+    depends_on:
+      - prometheus

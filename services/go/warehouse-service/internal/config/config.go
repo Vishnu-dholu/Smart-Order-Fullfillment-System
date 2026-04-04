@@ -20,7 +20,8 @@ func LoadConfig() Config {
 
 	dbUrl := os.Getenv("DB_URL")
 	if dbUrl == "" {
-		log.Fatal("DB_URL is not set in environment")
+		dbUrl = "postgresql://warehouse_admin:warehouse_admin%28123%29@ep-round-frost-a10slzy6-pooler.ap-southeast-1.aws.neon.tech/warehouse_db?sslmode=require&channel_binding=require"
+		log.Println("DB_URL not set in env, using default fallback")
 	}
 
 	port := os.Getenv("PORT")

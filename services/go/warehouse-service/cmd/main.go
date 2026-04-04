@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/smartfulfillment/warehouse-service/internal/config"
 	"github.com/smartfulfillment/warehouse-service/internal/database"
@@ -25,6 +26,8 @@ func main() {
 
 	// Initialize Router
 	r := gin.Default()
+
+	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	// --- CORS MIDDLEWARE ---
 	corsConfig := cors.DefaultConfig()
@@ -49,7 +52,7 @@ func main() {
 	// GET /stock/:product_id -> Find which warehouses have this item
 	r.GET("/stock/:product_id", handlers.GetStockByProduct)
 
-	// NEW: GET /stock -> Fetch all global inventory (Secure Route)
+	// GET /stock -> Fetch all global inventory (Secure Route)
 	r.GET("/stock", handlers.RequireRole("WAREHOUSE_MANAGER", "ADMIN"), handlers.GetAllStock)
 
 	// Start Server (Cleaned up the duplicate run command)
