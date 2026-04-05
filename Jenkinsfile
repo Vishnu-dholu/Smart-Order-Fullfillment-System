@@ -42,11 +42,19 @@ pipeline {
             }
         }
 
-        stage(' Deploy to Local Server') {
+        stage('Deploy to Local Server') {
             steps {
                 echo "Deploying the freshly built containers..."
-                sh 'docker compose down'
-                sh 'docker compose up -d'
+
+                withCredentials([
+                    string(credentialsId: 'WAREHOUSE_DB_URL', variable: 'WAREHOUSE_DB_URL'),
+                    string(credentialsId: 'DELIVERY_DB_URL', variable: 'DELIVERY_DB_URL'),
+                    string(credentialsId: 'NOTIFICATION_DB_URL', variable: 'NOTIFICATION_DB_URL')
+                    // You can add SMTP_EMAIL and others here later!
+                ]) {
+                    sh 'docker compose down'
+                    sh 'docker compose up -d'
+                }
             }
         }
     }
