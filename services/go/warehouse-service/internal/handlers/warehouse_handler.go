@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -21,7 +22,7 @@ import (
 // @Tags         warehouses
 // @Accept       json
 // @Produce      json
-// @Param        warehouse  body   models.Warehouse  true  "Warehouse Data"
+// @Param        warehouse  body      models.Warehouse  true  "Warehouse Data"
 // @Success      201  {object}  models.Warehouse
 // @Router       /warehouses [post]
 func CreateWarehouse(c *gin.Context) {
@@ -73,7 +74,7 @@ func UpdateStock(c *gin.Context) {
 
 	var stock models.WarehouseStock
 
-	// Transaction to enure atomic updates
+	// Transaction to ensure atomic updates
 	err = database.DB.Transaction(func(tx *gorm.DB) error {
 		// Check if stock entry exists for this product in this warehouse
 		result := tx.Where("warehouse_id = ? AND product_id = ?", warehouseUUID, req.ProductID).First(&stock)
@@ -120,8 +121,13 @@ func UpdateStock(c *gin.Context) {
 	syncPayload := map[string]int{"quantity": totalGlobalStock}
 	jsonData, _ := json.Marshal(syncPayload)
 
-	// Make HTTP PUT request to Java Inventory Service
-	inventoryURL := fmt.Sprintf("http://localhost:8082/products/%s/sync-stock", req.ProductID)
+	inventoryBaseURL := os.Getenv("INVENTORY_SERVICE_URL")
+	if inventoryBaseURL == "" {
+		// Fallback for local development without Docker
+		inventoryBaseURL = "http://localhost:8082"
+	}
+
+	inventoryURL := fmt.Sprintf("%s/products/%s/sync-stock", inventoryBaseURL, req.ProductID)
 
 	reqHttp, errHttp := http.NewRequest(http.MethodPut, inventoryURL, bytes.NewBuffer(jsonData))
 
@@ -135,9 +141,9 @@ func UpdateStock(c *gin.Context) {
 			log.Printf("Warning: Failed to connect to Inventory Service: %v", errClient)
 		} else {
 			if resp.StatusCode == http.StatusOK {
-				log.Printf("✅ Synced with Inventory Service. New Global Stock: %d", totalGlobalStock)
+				log.Printf("✓ Synced with Inventory Service. New Global Stock: %d", totalGlobalStock)
 			} else {
-				log.Printf("⚠️ Warning: Java responded with status code: %d", resp.StatusCode)
+				log.Printf("⚠ Warning: Java responded with status code: %d", resp.StatusCode)
 			}
 			resp.Body.Close()
 		}
@@ -171,7 +177,7 @@ func GetStockByProduct(c *gin.Context) {
 
 	var results []StockResult
 
-	// SQL: SELECT w.id, w.name. w.location, s.quantity FROM warehouses w JOIN stocks s ...
+	// SQL: SELECT w.id, w.name, w.location, s.quantity FROM warehouses w JOIN warehouse_stock s ...
 	err := database.DB.Table("warehouses").
 		Select("warehouses.warehouse_id, warehouses.name, warehouses.location, warehouses.latitude, warehouses.longitude, warehouse_stock.quantity").
 		Joins("JOIN warehouse_stock ON warehouse_stock.warehouse_id = warehouses.warehouse_id").

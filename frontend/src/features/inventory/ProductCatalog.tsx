@@ -1,5 +1,4 @@
-
-import { AlertCircle, Loader2, PackageSearch, ShoppingCart, Plus, Minus } from 'lucide-react';
+import { AlertCircle, Loader2, Minus, PackageSearch, Plus, ShoppingCart } from 'lucide-react';
 import { useCart } from '../../store/CartContext';
 import { useProducts } from './hooks/useProducts';
 
@@ -47,7 +46,7 @@ export const ProductCatalog = () => {
           const uniqueId = product.id || product.productId;
 
           // Check if this specific product is currently in the cart
-          const cartItem = cart.find(item => (item.id || item.productId) === uniqueId);
+          const cartItem = cart.find((item) => (item.id || item.productId) === uniqueId);
           const cartQuantity = cartItem ? cartItem.cartQuantity : 0;
 
           return (
@@ -55,8 +54,20 @@ export const ProductCatalog = () => {
               key={uniqueId}
               className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col"
             >
-              <div className="aspect-square bg-slate-50 rounded-xl mb-4 flex items-center justify-center border border-slate-100">
-                <PackageSearch className="h-12 w-12 text-slate-300" />
+              <div className="aspect-square bg-slate-50 rounded-xl mb-4 flex items-center justify-center border border-slate-100 overflow-hidden">
+                {product.imageUrl ? (
+                  <img
+                    src={product.imageUrl}
+                    alt={product.name}
+                    className="w-full h-full object-contain mix-blend-multiply p-2 transition-transform hover:scale-105 duration-300"
+                    onError={(e) => {
+                      // Fallback if the URL is broken or blocked
+                      e.currentTarget.src = 'https://placehold.co/400x400?text=Product+Image';
+                    }}
+                  />
+                ) : (
+                  <PackageSearch className="h-12 w-12 text-slate-300" />
+                )}
               </div>
 
               <div className="flex-grow space-y-2">
@@ -68,7 +79,6 @@ export const ProductCatalog = () => {
                 </div>
                 <p className="text-sm text-slate-500 line-clamp-2">{product.description}</p>
               </div>
-
               <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">
                 <span
                   className={`text-xs font-bold px-2.5 py-1 rounded-full border ${
@@ -89,16 +99,16 @@ export const ProductCatalog = () => {
                     >
                       <Minus className="h-4 w-4" />
                     </button>
-                    
+
                     <span className="text-sm font-bold text-slate-900 w-6 text-center">
                       {cartQuantity}
                     </span>
-                    
+
                     <button
                       disabled={cartQuantity >= availableStock}
                       onClick={() => addToCart(product)}
                       className="p-1.5 hover:bg-white rounded-md text-slate-700 shadow-sm transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                      title={cartQuantity >= availableStock ? "Max stock reached" : ""}
+                      title={cartQuantity >= availableStock ? 'Max stock reached' : ''}
                     >
                       <Plus className="h-4 w-4" />
                     </button>
@@ -113,7 +123,6 @@ export const ProductCatalog = () => {
                     Add
                   </button>
                 )}
-
               </div>
             </div>
           );
@@ -122,4 +131,3 @@ export const ProductCatalog = () => {
     </div>
   );
 };
-

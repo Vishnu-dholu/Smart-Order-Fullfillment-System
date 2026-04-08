@@ -8,11 +8,14 @@ export interface AuthResponse {
 export interface Product {
   id: string;
   productId?: string;
+  sku?: string;
   name: string;
   description: string;
   price: number;
+  imageUrl: string;
   totalStock: number;
   reservedStock: number;
+  lowStockThreshold?: number;
 }
 
 // --- WAREHOUSE SERVICE (Go - Port 8084) ---

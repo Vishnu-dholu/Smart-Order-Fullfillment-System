@@ -64,6 +64,11 @@ services:
     container_name: delivery-service
     ports:
       - '8085:8085'
+<<<<<<< HEAD
+=======
+    env_file:
+      - ./services/go/delivery-service/.env
+>>>>>>> 42e01cb (fix product image rendering, inventory syncing and update Jenkins deployment with DB credentials)
     environment:
       - DB_URL=${DELIVERY_DB_URL}
     networks:
@@ -74,6 +79,11 @@ services:
     container_name: notification-service
     ports:
       - '8086:8086'
+<<<<<<< HEAD
+=======
+    env_file:
+      - ./services/go/notification-service/.env
+>>>>>>> 42e01cb (fix product image rendering, inventory syncing and update Jenkins deployment with DB credentials)
     environment:
       - DB_URL=${NOTIFICATION_DB_URL}
     networks:
