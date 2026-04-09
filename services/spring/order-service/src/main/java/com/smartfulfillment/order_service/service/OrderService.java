@@ -37,78 +37,83 @@ public class OrderService {
     public Order placeOrder(OrderRequest request, UUID userId){
         log.info("Processing order for User: {}", userId);
 
-        // Initialize empty order
         Order order = initializeOrder(request, userId);
-
-        // Validate Items & Calculate Price (Inventory Service)
         List<OrderItem> items = createOrderItems(request.getItems(), order);
         order.setItems(items);
         order.setTotalAmount(calculateTotal(items));
 
-        // Allocate Stock (Warehouse Service)
-        allocateStock(items, request);
+        // SAGA STATE: Keep a ledger of successfully deducted stock so we know what to refund if things fail.
+        Map<UUID, OrderItem> allocationLedger = new HashMap<>();
 
-        // Finalize & Save
-        order.setStatus(OrderStatus.CONFIRMED);
-        Order savedOrder = orderRepository.save(order);
+        try {
+            // 1. Allocate Stock (Warehouse Service)
+            allocateStock(items, request, allocationLedger);
 
-        sendNotificationAsync(savedOrder, "ORDER_CONFIRMED", "bitbuster08@gmail.com");
+            // 2. Finalize & Save Local DB
+            order.setStatus(OrderStatus.CONFIRMED);
+            Order savedOrder = orderRepository.save(order);
 
-        return savedOrder;
+            // 3. Trigger Notification
+            sendNotificationAsync(savedOrder, "ORDER_CONFIRMED", "bitbuster08@gmail.com");
+
+            return savedOrder;
+
+        } catch (Exception e) {
+            log.error("Order process failed! Initiating Saga Compensation (Stock Refund)...", e);
+
+            // COMPENSATING TRANSACTION: Iterate through the ledger and refund the stock
+            for (Map.Entry<UUID, OrderItem> entry : allocationLedger.entrySet()) {
+                UUID warehouseId = entry.getKey();
+                OrderItem item = entry.getValue();
+                try {
+                    // Send a POSITIVE quantity to the Go service to refund it
+                    warehouseClient.updateStock(
+                            warehouseId,
+                            Map.of(
+                                    "product_id", item.getProductId(),
+                                    "quantity", item.getQuantity()
+                            )
+                    );
+                    log.info("SAGA RECOVERY: Refunded {} units of Product {} to Warehouse {}",
+                            item.getQuantity(), item.getProductId(), warehouseId);
+                } catch (Exception refundEx) {
+                    log.error("CRITICAL SAGA FAILURE: Could not refund Product {} to Warehouse {}. Manual intervention required!",
+                            item.getProductId(), warehouseId, refundEx);
+                }
+            }
+            throw new RuntimeException("Failed to place order. All deducted stock was refunded.", e);
+        }
     }
 
     public List<OrderResponse> getUserOrders(UUID userId) {
         List<Order> orders = orderRepository.findByUserIdOrderByCreatedAtDesc(userId);
-
-        return orders.stream().map(order -> OrderResponse.builder()
-                .orderId(order.getOrderId().toString())
-                .userId(order.getUserId().toString())
-                .status(order.getStatus().name())
-                .totalAmount(order.getTotalAmount())
-                .shippingAddress(order.getShippingAddress())
-                .createdAt(order.getCreatedAt().toString())
-                .build()
-        ).toList();
+        return orders.stream().map(this::mapToOrderResponse).toList();
     }
 
-    // Fetch ALL orders (for Warehouse Managers)
     public List<OrderResponse> getAllOrders() {
-        return orderRepository.findAll().stream().map(order -> OrderResponse.builder()
-                .orderId(order.getOrderId().toString())
-                .userId(order.getUserId().toString())
-                .status(order.getStatus().name())
-                .totalAmount(order.getTotalAmount())
-                .shippingAddress(order.getShippingAddress())
-                .createdAt(order.getCreatedAt().toString())
-                .build()
-        ).toList();
+        return orderRepository.findAll().stream().map(this::mapToOrderResponse).toList();
     }
 
-    // Update the Order Status
     @Transactional
     public void updateOrderStatus(UUID orderId, OrderStatus newStatus) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
 
-        // Check if we are transitioning to SHIPPED
         if(newStatus == OrderStatus.SHIPPED && order.getStatus() != OrderStatus.SHIPPED){
             log.info("Order {} is being shipped. Notifying Delivery Service...", orderId);
 
-            // Create the payload for the Go Delivery Service
             Map<String, String> deliveryPayload = Map.of(
                     "order_id", orderId.toString(),
                     "origin_warehouse", UUID.randomUUID().toString()
             );
 
             try{
-                // Trigger the Go microservice
                 deliveryClient.createDelivery(deliveryPayload);
                 log.info("Successfully generated tracking ticker for Order: {}", orderId);
             } catch (Exception e){
                 log.error("Failed to communicate with Delivery Service for Order: {}", orderId, e);
             }
 
-            // FIX: Pass the full 'order' object and the email string
             sendNotificationAsync(order, "ORDER_SHIPPED", "bitbuster08@gmail.com");
         }
 
@@ -118,7 +123,17 @@ public class OrderService {
 
     // --- HELPER METHODS ---
 
-    // Create the basic Order object
+    private OrderResponse mapToOrderResponse(Order order) {
+        return OrderResponse.builder()
+                .orderId(order.getOrderId().toString())
+                .userId(order.getUserId().toString())
+                .status(order.getStatus().name())
+                .totalAmount(order.getTotalAmount())
+                .shippingAddress(order.getShippingAddress())
+                .createdAt(order.getCreatedAt().toString())
+                .build();
+    }
+
     private Order initializeOrder(OrderRequest request, UUID userId){
         return Order.builder()
                 .userId(userId)
@@ -127,13 +142,10 @@ public class OrderService {
                 .build();
     }
 
-    // Talk to Inventory Service & Build Items
     private List<OrderItem> createOrderItems(List<OrderRequest.OrderItemRequest> itemRequests, Order order){
         List<OrderItem> items = new ArrayList<>();
-
         for(OrderRequest.OrderItemRequest req : itemRequests){
             ProductDTO product = fetchProductFromInventory(req.getProductId());
-
             items.add(OrderItem.builder()
                     .order(order)
                     .productId(req.getProductId())
@@ -163,36 +175,31 @@ public class OrderService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    // Talk to Warehouse Service (the complexity was mostly here!)
-    private void allocateStock(List<OrderItem> items, OrderRequest request){
+    // Pass the ledger down so we can track exactly which warehouse gave up the stock
+    private void allocateStock(List<OrderItem> items, OrderRequest request, Map<UUID, OrderItem> allocationLedger){
         for (OrderItem item : items){
-            boolean success = attemptToAllocateItem(item, request);
-            if(!success){
+            UUID allocatedWarehouseId = attemptToAllocateItem(item, request);
+            if(allocatedWarehouseId == null){
                 throw new RuntimeException("Insufficient stock for Product ID: " + item.getProductId());
             }
+            // Record the successful deduction!
+            allocationLedger.put(allocatedWarehouseId, item);
         }
     }
 
-    private boolean attemptToAllocateItem(OrderItem item, OrderRequest request){
+    private UUID attemptToAllocateItem(OrderItem item, OrderRequest request){
         List<StockDTO> warehouses = warehouseClient.getStockByProduct(item.getProductId());
 
-        // Stream, filter by quantity, and sort by geographic distance
         StockDTO closestWarehouse = warehouses.stream()
                 .filter(wh -> wh.getQuantity() >= item.getQuantity())
                 .min(Comparator.comparingDouble(wh -> {
-                    // Fallback to 0 if coordinates are missing to prevent NullPointerException
                     double userLat = request.getShippingLatitude() != null ? request.getShippingLatitude() : 0.0;
                     double userLng = request.getShippingLongitude() != null ? request.getShippingLongitude() : 0.0;
-
-                    return LocationUtils.calculateDistance(
-                            userLat, userLng,
-                            wh.getLatitude(), wh.getLongitude()
-                    );
+                    return LocationUtils.calculateDistance(userLat, userLng, wh.getLatitude(), wh.getLongitude());
                 }))
                 .orElse(null);
 
         if(closestWarehouse != null){
-            // Calculate final distance for logging
             double distanceKm = LocationUtils.calculateDistance(
                     request.getShippingLatitude() != null ? request.getShippingLatitude() : 0.0,
                     request.getShippingLongitude() != null ? request.getShippingLongitude() : 0.0,
@@ -202,10 +209,12 @@ public class OrderService {
             log.info("SMART ROUTING: Assigning Product {} to '{}' ({}). Distance: {} km.",
                     item.getProductId(), closestWarehouse.getWarehouseName(), closestWarehouse.getLocation(), String.format("%.2f", distanceKm));
 
-            return deductStockFromWareHouse(closestWarehouse, item);
+            boolean success = deductStockFromWareHouse(closestWarehouse, item);
+            if (success) {
+                return closestWarehouse.getWarehouseId();
+            }
         }
-
-        return false;   // No suitable warehouse found
+        return null;
     }
 
     private boolean deductStockFromWareHouse(StockDTO warehouse, OrderItem item){
@@ -214,7 +223,7 @@ public class OrderService {
                     warehouse.getWarehouseId(),
                     Map.of(
                             "product_id", item.getProductId(),
-                            "quantity", -item.getQuantity()
+                            "quantity", -item.getQuantity() // NEGATIVE to deduct
                     )
             );
             log.info("Allocated {} items of Product {} from Warehouse {}",
@@ -226,7 +235,6 @@ public class OrderService {
         }
     }
 
-    // UPDATED: Now takes the full Order object to extract details
     private void sendNotificationAsync(Order order, String type, String recipientEmail){
         new Thread(() -> {
             try {

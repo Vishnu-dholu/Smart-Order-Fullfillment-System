@@ -49,14 +49,19 @@ pipeline {
                 withCredentials([
                     string(credentialsId: 'WAREHOUSE_DB_URL', variable: 'WAREHOUSE_DB_URL'),
                     string(credentialsId: 'DELIVERY_DB_URL', variable: 'DELIVERY_DB_URL'),
-                    string(credentialsId: 'NOTIFICATION_DB_URL', variable: 'NOTIFICATION_DB_URL')
+                    string(credentialsId: 'NOTIFICATION_DB_URL', variable: 'NOTIFICATION_DB_URL'),
+                    string(credentialsId: 'SMTP_EMAIL', variable: 'SMTP_EMAIL'),
+                    string(credentialsId: 'SMTP_PASSWORD', variable: 'SMTP_PASSWORD')
                 ]) {
                     sh '''
                     echo "Creating .env files for Go microservices..."
 
                     echo "DB_URL=${WAREHOUSE_DB_URL}" > ./services/go/warehouse-service/.env
                     echo "DB_URL=${DELIVERY_DB_URL}" > ./services/go/delivery-service/.env
+
                     echo "DB_URL=${NOTIFICATION_DB_URL}" > ./services/go/notification-service/.env
+                    echo "SMTP_EMAIL=${SMTP_EMAIL}" >> ./services/go/notification-service/.env
+                    echo "SMTP_PASSWORD=${SMTP_PASSWORD}" >> ./services/go/notification-service/.env
 
                     echo "Force-killing any global ghost containers..."
                     docker rm -f smart-order-frontend auth-service inventory-service order-service warehouse-service delivery-service notification-service || true
