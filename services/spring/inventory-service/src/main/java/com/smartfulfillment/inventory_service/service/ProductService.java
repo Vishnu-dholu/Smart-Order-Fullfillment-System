@@ -7,6 +7,7 @@ import com.smartfulfillment.inventory_service.repository.GlobalInventoryReposito
 import com.smartfulfillment.inventory_service.repository.ProductRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -42,6 +43,7 @@ public class ProductService {
         }).collect(Collectors.toList());
     }
 
+    @Cacheable(value = "products", key = "#id")
     public Product getProductById(UUID id){
         return productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));

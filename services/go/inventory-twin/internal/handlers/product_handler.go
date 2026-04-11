@@ -3,6 +3,7 @@ package handlers
 import (
 	"log"
 	"net/http"
+	"sync"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -10,6 +11,19 @@ import (
 	"github.com/smartfulfillment/inventory-twin/internal/models"
 	"gorm.io/gorm"
 )
+
+// --- CACHE SETUP ---
+// A thread-safe map to store our products in RAM
+type ProductCache struct {
+	sync.RWMutex
+	items map[string]models.Product
+}
+
+var inventoryCache = &ProductCache{
+	items: make(map[string]models.Product),
+}
+
+// -------------------
 
 // GetAllProductsWithStock matches GET /products
 func GetAllProductsWithStock(c *gin.Context) {
@@ -21,8 +35,6 @@ func GetAllProductsWithStock(c *gin.Context) {
 
 	var responses []models.ProductResponse
 
-	// In Go, it's often faster to fetch all inventory at once, but to perfectly match
-	// the Java logic for benchmarking, we will fetch them iteratively (N+1 query pattern).
 	for _, product := range products {
 		var inventory models.GlobalInventory
 		err := database.DB.Where("product_id = ?", product.ID).First(&inventory).Error
@@ -56,6 +68,19 @@ func GetAllProductsWithStock(c *gin.Context) {
 // GetProductById matches GET /products/{id}
 func GetProductById(c *gin.Context) {
 	productIDParam := c.Param("id")
+
+	// --- 1. CACHE CHECK (READ LOCK) ---
+	inventoryCache.RLock() // Lock for reading
+	cachedProduct, found := inventoryCache.items[productIDParam]
+	inventoryCache.RUnlock()
+
+	if found {
+		// CACHE HIT: Return instantly from RAM
+		c.JSON(http.StatusOK, cachedProduct)
+		return
+	}
+
+	// --- 2. CACHE MISS: HIT THE DATABASE ---
 	productUUID, err := uuid.Parse(productIDParam)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Product ID"})
@@ -71,6 +96,12 @@ func GetProductById(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch product"})
 		return
 	}
+
+	// --- 3. UPDATE CACHE (WRITE LOCK) ---
+	inventoryCache.Lock() // Lock entirely for writing
+	inventoryCache.items[productIDParam] = product
+	inventoryCache.Unlock()
+
 	c.JSON(http.StatusOK, product)
 }
 
@@ -82,14 +113,11 @@ func CreateProduct(c *gin.Context) {
 		return
 	}
 
-	// Transaction to ensure both product and inventory are created atomically
 	err := database.DB.Transaction(func(tx *gorm.DB) error {
-		// Save the Product
 		if err := tx.Create(&product).Error; err != nil {
 			return err
 		}
 
-		// Initialize Global Inventory (Stock = 0)
 		inventory := models.GlobalInventory{
 			ProductID:     product.ID,
 			TotalStock:    0,
@@ -122,13 +150,11 @@ func SyncStockFromWarehouse(c *gin.Context) {
 		return
 	}
 
-	// Extract the absolute total calculated by Go
 	absoluteTotal := 0
 	if val, ok := payload["quantity"]; ok {
 		absoluteTotal = val
 	}
 
-	// Overwrite the database with Go's absolute truth
 	var inventory models.GlobalInventory
 	err = database.DB.Where("product_id = ?", productUUID).First(&inventory).Error
 
@@ -137,7 +163,6 @@ func SyncStockFromWarehouse(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to sync stock"})
 			return
 		}
-		// Create if not exists
 		inventory = models.GlobalInventory{
 			ProductID:     productUUID,
 			TotalStock:    absoluteTotal,
@@ -148,7 +173,6 @@ func SyncStockFromWarehouse(c *gin.Context) {
 			return
 		}
 	} else {
-		// Update existing
 		inventory.TotalStock = absoluteTotal
 		if saveErr := database.DB.Save(&inventory).Error; saveErr != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to sync stock"})
