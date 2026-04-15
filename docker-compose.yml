@@ -1,6 +1,25 @@
 version: '3.8'
 
 services:
+  api-gateway:
+    build: ./services/spring/api-gateway
+    container_name: api-gateway
+    ports:
+      - '8080:8080'
+    environment:
+      - AUTH_SERVICE_URL=http://auth-service:8081
+      - INVENTORY_SERVICE_URL=http://inventory-service:8082
+      - ORDER_SERVICE_URL=http://order-service:8083
+      - WAREHOUSE_SERVICE_URL=http://warehouse-service:8084
+      - JWT_SECRET=404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+    depends_on:
+      - auth-service
+      - inventory-service
+      - order-service
+      - warehouse-service
+    networks:
+      - microservices-net
+
   # ==========================================
   # ⚛️ FRONTEND
   # ==========================================
@@ -28,6 +47,8 @@ services:
     container_name: inventory-service
     ports:
       - '8082:8082'
+    environment:
+      - INTERNAL_SERVICE_TOKEN=${INTERNAL_SERVICE_TOKEN:-smartfill-internal-token}
     networks:
       - microservices-net
 
@@ -42,6 +63,7 @@ services:
       - WAREHOUSE_SERVICE_URL=http://warehouse-service:8084
       - DELIVERY_SERVICE_URL=http://delivery-service:8085
       - NOTIFICATION_SERVICE_URL=http://notification-service:8086
+      - INTERNAL_SERVICE_TOKEN=${INTERNAL_SERVICE_TOKEN:-smartfill-internal-token}
     networks:
       - microservices-net
 
@@ -57,6 +79,7 @@ services:
       - ./services/go/warehouse-service/.env
     environment:
       - INVENTORY_SERVICE_URL=http://inventory-service:8082
+      - INTERNAL_SERVICE_TOKEN=${INTERNAL_SERVICE_TOKEN:-smartfill-internal-token}
     networks:
       - microservices-net
 
@@ -67,6 +90,8 @@ services:
       - '8085:8085'
     env_file:
       - ./services/go/delivery-service/.env
+    environment:
+      - INTERNAL_SERVICE_TOKEN=${INTERNAL_SERVICE_TOKEN:-smartfill-internal-token}
     networks:
       - microservices-net
 
@@ -77,6 +102,8 @@ services:
       - '8086:8086'
     env_file:
       - ./services/go/notification-service/.env
+    environment:
+      - INTERNAL_SERVICE_TOKEN=${INTERNAL_SERVICE_TOKEN:-smartfill-internal-token}
     networks:
       - microservices-net
 

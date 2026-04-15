@@ -4,12 +4,21 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/Vishnu-dholu/Smart-Order-Fullfillment-System/services/go/delivery-service/internal/database"
 	"github.com/Vishnu-dholu/Smart-Order-Fullfillment-System/services/go/delivery-service/internal/models"
 	"github.com/gin-gonic/gin"
 )
+
+func hasValidInternalToken(c *gin.Context) bool {
+	expected := os.Getenv("INTERNAL_SERVICE_TOKEN")
+	if expected == "" {
+		expected = "smartfill-internal-token"
+	}
+	return c.GetHeader("X-Internal-Token") == expected
+}
 
 // Request payload for creating a delivery
 type CreateDeliveryRequest struct {
@@ -33,6 +42,11 @@ type UpdateStatusRequest struct {
 // @Success      201  {object}  models.Shipment
 // @Router       /deliveries [post]
 func CreateDelivery(c *gin.Context) {
+	if !hasValidInternalToken(c) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden: invalid internal token"})
+		return
+	}
+
 	var req CreateDeliveryRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

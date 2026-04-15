@@ -1,5 +1,4 @@
 import { GoogleOAuthProvider } from '@react-oauth/google';
-import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App.tsx';
@@ -17,16 +16,13 @@ if (!clientId) {
 }
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    {/* Ensure clientId is not null/undefined here */}
-    <GoogleOAuthProvider clientId={clientId}>
-      <BrowserRouter>
-        <AuthProvider>
-          <CartProvider>
-            <App />
-          </CartProvider>
-        </AuthProvider>
-      </BrowserRouter>
-    </GoogleOAuthProvider>
-  </StrictMode>,
+  <GoogleOAuthProvider clientId={clientId}>
+    <BrowserRouter>
+      <AuthProvider>
+        <CartProvider>
+          <App />
+        </CartProvider>
+      </AuthProvider>
+    </BrowserRouter>
+  </GoogleOAuthProvider>,
 );

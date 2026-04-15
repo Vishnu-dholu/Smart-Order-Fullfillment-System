@@ -29,7 +29,7 @@ pipeline {
                 stage(' Java Core (Maven)') {
                     steps {
                         echo "Building Spring Boot Services..."
-                        sh 'docker compose build auth-service inventory-service order-service'
+                        sh 'docker compose build api-gateway auth-service inventory-service order-service'
                     }
                 }
 
@@ -64,7 +64,7 @@ pipeline {
                     echo "SMTP_PASSWORD=${SMTP_PASSWORD}" >> ./services/go/notification-service/.env
 
                     echo "Force-killing any global ghost containers..."
-                    docker rm -f smart-order-frontend auth-service inventory-service order-service warehouse-service delivery-service notification-service || true
+                    docker rm -f smart-order-frontend api-gateway auth-service inventory-service order-service warehouse-service delivery-service notification-service || true
 
                     docker compose down
                     docker compose up -d

@@ -16,6 +16,22 @@ import (
 	"gorm.io/gorm"
 )
 
+func hasValidInternalToken(c *gin.Context) bool {
+	expected := os.Getenv("INTERNAL_SERVICE_TOKEN")
+	if expected == "" {
+		expected = "smartfill-internal-token"
+	}
+	return c.GetHeader("X-Internal-Token") == expected
+}
+
+func hasWarehouseWriteAccess(c *gin.Context) bool {
+	if hasValidInternalToken(c) {
+		return true
+	}
+	userRole := c.GetHeader("X-User-Role")
+	return userRole == "ADMIN" || userRole == "WAREHOUSE_MANAGER"
+}
+
 // CreateWarehouse
 // @Summary      Create a new warehouse
 // @Description  Creates a warehouse entry in the system
@@ -59,6 +75,11 @@ type StockUpdateRequest struct {
 // @Success      200  {object}  map[string]interface{}
 // @Router       /warehouses/{warehouse_id}/stock [post]
 func UpdateStock(c *gin.Context) {
+	if !hasWarehouseWriteAccess(c) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden: insufficient permissions"})
+		return
+	}
+
 	warehouseIDParam := c.Param("warehouse_id")
 	warehouseUUID, err := uuid.Parse(warehouseIDParam)
 	if err != nil {
@@ -134,6 +155,11 @@ func UpdateStock(c *gin.Context) {
 	if errHttp == nil {
 		// Must tell Java that we are sending JSON!
 		reqHttp.Header.Set("Content-Type", "application/json")
+		internalToken := os.Getenv("INTERNAL_SERVICE_TOKEN")
+		if internalToken == "" {
+			internalToken = "smartfill-internal-token"
+		}
+		reqHttp.Header.Set("X-Internal-Token", internalToken)
 
 		client := &http.Client{Timeout: 5 * time.Second}
 		resp, errClient := client.Do(reqHttp)

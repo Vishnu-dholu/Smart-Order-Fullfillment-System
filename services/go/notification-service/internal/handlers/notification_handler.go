@@ -22,6 +22,14 @@ type SendNotificationRequest struct {
 	ShippingAddress string `json:"shipping_address"`
 }
 
+func hasValidInternalToken(c *gin.Context) bool {
+	expected := os.Getenv("INTERNAL_SERVICE_TOKEN")
+	if expected == "" {
+		expected = "smartfill-internal-token"
+	}
+	return c.GetHeader("X-Internal-Token") == expected
+}
+
 // Helper function to actually send the email
 func sendRealEmail(to string, subject string, body string) {
 	from := os.Getenv("SMTP_EMAIL")
@@ -54,6 +62,11 @@ func sendRealEmail(to string, subject string, body string) {
 // @Success      201  {object}  map[string]interface{}
 // @Router       /notifications [post]
 func SendNotification(c *gin.Context) {
+	if !hasValidInternalToken(c) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden: invalid internal token"})
+		return
+	}
+
 	var req SendNotificationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

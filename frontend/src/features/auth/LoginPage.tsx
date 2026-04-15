@@ -149,19 +149,15 @@ export const LoginPage = () => {
           </div>
 
           {/* Google Button */}
-          <div className="flex justify-center w-full">
-            {isLoading ? (
-              <div className="h-10 w-full bg-gray-50 rounded border flex items-center justify-center text-gray-400 text-sm">
-                Connecting to Google...
-              </div>
-            ) : (
-              <GoogleLogin
-                onSuccess={handleGoogleSuccess}
-                onError={() => console.log('Google Login Failed')}
-                useOneTap
-                shape="rectangular"
-                width="380"
-              />
+          <div className="flex flex-col items-center w-full gap-2">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => console.log('Google Login Failed')}
+              shape="rectangular"
+              width="380"
+            />
+            {isLoading && (
+              <div className="text-xs text-slate-500">Connecting to Google...</div>
             )}
           </div>
         </form>

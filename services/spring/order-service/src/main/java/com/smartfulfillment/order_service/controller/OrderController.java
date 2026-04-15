@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @RestController
@@ -41,7 +42,12 @@ public class OrderController {
 
     // Endpoint for Warehouse Managers to see all orders across the system
     @GetMapping("/all")
-    public ResponseEntity<List<OrderResponse>> getAllSystemOrders() {
+    public ResponseEntity<List<OrderResponse>> getAllSystemOrders(
+            @RequestHeader(value = "X-User-Role", required = false) String userRole
+    ) {
+        if (!hasAnyRole(userRole, "ADMIN", "WAREHOUSE_MANAGER")) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
         return ResponseEntity.ok(orderService.getAllOrders());
     }
 
@@ -49,10 +55,22 @@ public class OrderController {
     @PutMapping("/{orderId}/status")
     public ResponseEntity<Void> updateOrderStatus(
             @PathVariable UUID orderId,
+            @RequestHeader(value = "X-User-Role", required = false) String userRole,
             @RequestBody Map<String, String> statusUpdate
     ) {
+        if (!hasAnyRole(userRole, "ADMIN", "WAREHOUSE_MANAGER")) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
         OrderStatus newStatus = OrderStatus.valueOf(statusUpdate.get("status").toUpperCase());
         orderService.updateOrderStatus(orderId, newStatus);
         return ResponseEntity.ok().build();
+    }
+
+    private boolean hasAnyRole(String userRole, String... allowedRoles) {
+        if (userRole == null || userRole.isBlank()) {
+            return false;
+        }
+        Set<String> allowed = Set.of(allowedRoles);
+        return allowed.contains(userRole.toUpperCase());
     }
 }

@@ -12,21 +12,10 @@ const createApiClient = (baseURL: string | undefined, defaultURL: string): Axios
   client.interceptors.request.use(
     (config) => {
       const token = localStorage.getItem('token');
-      const userId = localStorage.getItem('userId');
-      const userRole = localStorage.getItem('userRole');
 
-      // Attach JWT for Spring Security / Go Auth
+      // Gateway validates JWT and injects trusted identity headers downstream.
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
-      }
-
-      // Attach User ID for your Java Order Service routing
-      if (userId) {
-        config.headers['X-User-Id'] = userId;
-      }
-
-      if (userRole) {
-        config.headers['X-User-Role'] = userRole;
       }
 
       return config;
@@ -38,19 +27,21 @@ const createApiClient = (baseURL: string | undefined, defaultURL: string): Axios
   return client;
 };
 
+const gatewayBaseUrl = import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:8080';
+
 export const authApi = createApiClient(
-  import.meta.env.VITE_AUTH_SERVICE_URL,
-  'http://localhost:8081',
+  `${gatewayBaseUrl}/api`,
+  'http://localhost:8080/api',
 );
 export const inventoryApi = createApiClient(
-  import.meta.env.VITE_INVENTORY_SERVICE_URL,
-  'http://localhost:8082',
+  `${gatewayBaseUrl}/api`,
+  'http://localhost:8080/api',
 );
 export const orderApi = createApiClient(
-  import.meta.env.VITE_ORDER_SERVICE_URL,
-  'http://localhost:8083',
+  `${gatewayBaseUrl}/api`,
+  'http://localhost:8080/api',
 );
 export const warehouseApi = createApiClient(
-  import.meta.env.VITE_WAREHOUSE_SERVICE_URL,
-  'http://localhost:8084',
+  `${gatewayBaseUrl}/api/warehouse`,
+  'http://localhost:8080/api/warehouse',
 );
