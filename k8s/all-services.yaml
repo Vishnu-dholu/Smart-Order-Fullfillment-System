@@ -1,0 +1,233 @@
+# ==========================================
+# 🛡️ API GATEWAY
+# ==========================================
+apiVersion: v1
+kind: Service
+metadata: { name: api-gateway, namespace: smart-order }
+spec:
+  selector: { app: api-gateway }
+  ports: [{ port: 8080, targetPort: 8080 }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: api-gateway, namespace: smart-order }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: api-gateway } }
+  template:
+    metadata: { labels: { app: api-gateway } }
+    spec:
+      containers:
+        - name: api-gateway
+          image: localhost:5001/smart-order/api-gateway:latest
+          imagePullPolicy: IfNotPresent
+          ports: [{ containerPort: 8080 }]
+          envFrom: [{ secretRef: { name: smart-order-secrets } }]
+          env:
+            - name: AUTH_SERVICE_URL
+              value: 'http://auth-service:8081'
+            - name: INVENTORY_SERVICE_URL
+              value: 'http://inventory-service:8082'
+            - name: ORDER_SERVICE_URL
+              value: 'http://order-service:8083'
+            - name: WAREHOUSE_SERVICE_URL
+              value: 'http://warehouse-service:8084'
+---
+# ==========================================
+# ☕ AUTH SERVICE
+# ==========================================
+apiVersion: v1
+kind: Service
+metadata: { name: auth-service, namespace: smart-order }
+spec:
+  selector: { app: auth-service }
+  ports: [{ port: 8081, targetPort: 8081 }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: auth-service, namespace: smart-order }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: auth-service } }
+  template:
+    metadata: { labels: { app: auth-service } }
+    spec:
+      containers:
+        - name: auth-service
+          image: localhost:5001/smart-order/auth-service:latest
+          imagePullPolicy: IfNotPresent
+          ports: [{ containerPort: 8081 }]
+          envFrom: [{ secretRef: { name: smart-order-secrets } }]
+          env:
+            - name: SPRING_DATASOURCE_URL
+              valueFrom: { secretKeyRef: { name: smart-order-secrets, key: AUTH_DB_URL } }
+---
+# ==========================================
+# ☕ ORDER SERVICE
+# ==========================================
+apiVersion: v1
+kind: Service
+metadata: { name: order-service, namespace: smart-order }
+spec:
+  selector: { app: order-service }
+  ports: [{ port: 8083, targetPort: 8083 }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: order-service, namespace: smart-order }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: order-service } }
+  template:
+    metadata: { labels: { app: order-service } }
+    spec:
+      containers:
+        - name: order-service
+          image: localhost:5001/smart-order/order-service:latest
+          imagePullPolicy: IfNotPresent
+          ports: [{ containerPort: 8083 }]
+          envFrom: [{ secretRef: { name: smart-order-secrets } }]
+          env:
+            - name: SPRING_DATASOURCE_URL
+              valueFrom: { secretKeyRef: { name: smart-order-secrets, key: ORDER_DB_URL } }
+---
+# ==========================================
+# ☕ INVENTORY SERVICE
+# ==========================================
+apiVersion: v1
+kind: Service
+metadata: { name: inventory-service, namespace: smart-order }
+spec:
+  selector: { app: inventory-service }
+  ports: [{ port: 8082, targetPort: 8082 }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: inventory-service, namespace: smart-order }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: inventory-service } }
+  template:
+    metadata: { labels: { app: inventory-service } }
+    spec:
+      containers:
+        - name: inventory-service
+          image: localhost:5001/smart-order/inventory-service:latest
+          imagePullPolicy: IfNotPresent
+          ports: [{ containerPort: 8082 }]
+          envFrom: [{ secretRef: { name: smart-order-secrets } }]
+          env:
+            - name: SPRING_DATASOURCE_URL
+              valueFrom: { secretKeyRef: { name: smart-order-secrets, key: INVENTORY_DB_URL } }
+---
+# ==========================================
+# 🐹 WAREHOUSE SERVICE
+# ==========================================
+apiVersion: v1
+kind: Service
+metadata: { name: warehouse-service, namespace: smart-order }
+spec:
+  selector: { app: warehouse-service }
+  ports: [{ port: 8084, targetPort: 8084 }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: warehouse-service, namespace: smart-order }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: warehouse-service } }
+  template:
+    metadata: { labels: { app: warehouse-service } }
+    spec:
+      containers:
+        - name: warehouse-service
+          image: localhost:5001/smart-order/warehouse-service:latest
+          imagePullPolicy: IfNotPresent
+          ports: [{ containerPort: 8084 }]
+          envFrom: [{ secretRef: { name: smart-order-secrets } }]
+          env:
+            - name: DB_URL # 🛡️ FIX 3: Corrected from DATABASE_URL to DB_URL
+              valueFrom: { secretKeyRef: { name: smart-order-secrets, key: WAREHOUSE_DB_URL } }
+---
+# ==========================================
+# 🐹 DELIVERY SERVICE
+# ==========================================
+apiVersion: v1
+kind: Service
+metadata: { name: delivery-service, namespace: smart-order }
+spec:
+  selector: { app: delivery-service }
+  ports: [{ port: 8085, targetPort: 8085 }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: delivery-service, namespace: smart-order }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: delivery-service } }
+  template:
+    metadata: { labels: { app: delivery-service } }
+    spec:
+      containers:
+        - name: delivery-service
+          image: localhost:5001/smart-order/delivery-service:latest
+          imagePullPolicy: IfNotPresent
+          ports: [{ containerPort: 8085 }]
+          envFrom: [{ secretRef: { name: smart-order-secrets } }]
+          env:
+            - name: DATABASE_URL
+              valueFrom: { secretKeyRef: { name: smart-order-secrets, key: DELIVERY_DB_URL } }
+---
+# ==========================================
+# 🐹 NOTIFICATION SERVICE
+# ==========================================
+apiVersion: v1
+kind: Service
+metadata: { name: notification-service, namespace: smart-order }
+spec:
+  selector: { app: notification-service }
+  ports: [{ port: 8086, targetPort: 8086 }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: notification-service, namespace: smart-order }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: notification-service } }
+  template:
+    metadata: { labels: { app: notification-service } }
+    spec:
+      containers:
+        - name: notification-service
+          image: localhost:5001/smart-order/notification-service:latest
+          imagePullPolicy: IfNotPresent
+          ports: [{ containerPort: 8086 }]
+          envFrom: [{ secretRef: { name: smart-order-secrets } }]
+          env:
+            - name: DATABASE_URL
+              valueFrom: { secretKeyRef: { name: smart-order-secrets, key: NOTIFICATION_DB_URL } }
+---
+# ==========================================
+# ⚛️ FRONTEND
+# ==========================================
+apiVersion: v1
+kind: Service
+metadata: { name: frontend, namespace: smart-order }
+spec:
+  selector: { app: frontend }
+  ports: [{ port: 80, targetPort: 80 }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: frontend, namespace: smart-order }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: frontend } }
+  template:
+    metadata: { labels: { app: frontend } }
+    spec:
+      containers:
+        - name: frontend
+          image: localhost:5001/smart-order/frontend:latest
+          imagePullPolicy: IfNotPresent
+          ports: [{ containerPort: 80 }]

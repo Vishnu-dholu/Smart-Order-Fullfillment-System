@@ -27,21 +27,9 @@ const createApiClient = (baseURL: string | undefined, defaultURL: string): Axios
   return client;
 };
 
-const gatewayBaseUrl = import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:8080';
+const gatewayBaseUrl = import.meta.env.VITE_API_GATEWAY_URL || '';
 
-export const authApi = createApiClient(
-  `${gatewayBaseUrl}/api`,
-  'http://localhost:8080/api',
-);
-export const inventoryApi = createApiClient(
-  `${gatewayBaseUrl}/api`,
-  'http://localhost:8080/api',
-);
-export const orderApi = createApiClient(
-  `${gatewayBaseUrl}/api`,
-  'http://localhost:8080/api',
-);
-export const warehouseApi = createApiClient(
-  `${gatewayBaseUrl}/api/warehouse`,
-  'http://localhost:8080/api/warehouse',
-);
+export const authApi = createApiClient(`${gatewayBaseUrl}/api`, '/api');
+export const inventoryApi = createApiClient(`${gatewayBaseUrl}/api`, '/api');
+export const orderApi = createApiClient(`${gatewayBaseUrl}/api`, '/api');
+export const warehouseApi = createApiClient(`${gatewayBaseUrl}/api/warehouse`, '/api/warehouse');
