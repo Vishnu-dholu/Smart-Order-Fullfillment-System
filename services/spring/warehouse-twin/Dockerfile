@@ -42,4 +42,4 @@ EXPOSE 9084
 # Run the Spring Boot application
 # Note: For advanced performance testing later, we can inject JVM flags here
 # (e.g., -Xms512m -Xmx512m -XX:+UseZGC) via docker-compose environment variables.
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-Xms256m", "-Xmx512m", "-XX:+UseG1GC", "-XX:+PrintGCDetails", "-Xlog:gc*:file=/tmp/gc.log", "-jar", "app.jar"]

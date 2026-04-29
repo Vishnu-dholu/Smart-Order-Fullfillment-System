@@ -18,6 +18,11 @@ services:
       - ssp-net
     environment:
       - PORT=8082
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 768M
 
   order-java:
     build:
@@ -32,6 +37,11 @@ services:
       - INVENTORY_SERVICE_URL=http://inventory-java:8082
       - WAREHOUSE_SERVICE_URL=http://warehouse-go:8084
       - NOTIFICATION_SERVICE_URL=http://notification-service:8086
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 768M
 
   warehouse-go:
     build:
@@ -45,6 +55,11 @@ services:
       - ./services/go/warehouse-service/.env
     environment:
       - PORT=8084
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 768M
 
   # ==========================================
   # THE TEST GROUP (The Twins)
@@ -61,6 +76,11 @@ services:
       - ./services/go/inventory-twin/.env
     environment:
       - PORT=9082
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 768M
 
   order-go-twin:
     build:
@@ -76,6 +96,11 @@ services:
       - PORT=9083
       - INVENTORY_SERVICE_URL=http://inventory-go-twin:9082
       - WAREHOUSE_SERVICE_URL=http://warehouse-java-twin:9084
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 768M
 
   warehouse-java-twin:
     build:
@@ -88,6 +113,11 @@ services:
     environment:
       - PORT=9084
       - INVENTORY_SERVICE_URL=http://inventory-go-twin:9082
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 768M
 
   # ==========================================
   # OBSERVABILITY STACK (The Observers)
