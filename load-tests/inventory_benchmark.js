@@ -60,22 +60,45 @@ import { check, sleep } from 'k6';
 import exec from 'k6/execution';
 import http from 'k6/http';
 
+
+// ==============================================================================
+// RIGOROUS 35-MINUTE STAGED LOAD RAMP (ACTIVE)
+// ==============================================================================
 export const options = {
-    // Fast-Track Profile: 5 minutes total
     stages: [
-        { duration: '30s', target: 10 },   // Warm-up
-        { duration: '30s', target: 50 },   // Ramp 1
-        { duration: '30s', target: 100 },  // Ramp 2
-        { duration: '30s', target: 200 },  // Ramp 3
-        { duration: '2m', target: 200 },  // Sustain
-        { duration: '1m', target: 0 },    // Cool-down
+        { duration: '5m', target: 10 },   // Warm-up: Allow JIT compilation and pool initialization
+        { duration: '5m', target: 50 },   // Ramp 1: Light load
+        { duration: '5m', target: 100 },  // Ramp 2: Medium load
+        { duration: '5m', target: 200 },  // Ramp 3: Heavy load
+        { duration: '10m', target: 200 }, // Sustain: Observe steady-state memory and GC behaviour
+        { duration: '5m', target: 0 },    // Cool-down: Allow connections to drain gracefully
     ],
-    // SLA Thresholds
     thresholds: {
         http_req_duration: ['p(99)<500'], // 99% of requests must complete below 500ms
         http_req_failed: ['rate<0.01'],   // Error rate must be strictly less than 1%
     },
 };
+
+
+// ==============================================================================
+// FAST-TRACK PROFILE: 5 MINUTES TOTAL (COMMENTED OUT)
+// ==============================================================================
+// export const options = {
+//     // Fast-Track Profile: 5 minutes total
+//     stages: [
+//         { duration: '30s', target: 10 },   // Warm-up
+//         { duration: '30s', target: 50 },   // Ramp 1
+//         { duration: '30s', target: 100 },  // Ramp 2
+//         { duration: '30s', target: 200 },  // Ramp 3
+//         { duration: '2m', target: 200 },  // Sustain
+//         { duration: '1m', target: 0 },    // Cool-down
+//     ],
+//     // SLA Thresholds
+//     thresholds: {
+//         http_req_duration: ['p(99)<500'], // 99% of requests must complete below 500ms
+//         http_req_failed: ['rate<0.01'],   // Error rate must be strictly less than 1%
+//     },
+// };
 
 // Target URL passed dynamically from the bash script
 const TARGET_URL = __ENV.TARGET_URL || 'http://localhost:8082/products';
@@ -97,7 +120,6 @@ const PRODUCT_IDS = [
 
 export default function () {
     // Randomly pick a product ID to view
-    // const randomProductId = PRODUCT_IDS[Math.floor(Math.random() * PRODUCT_IDS.length)];
     const randomProductId =
         PRODUCT_IDS[(exec.scenario.iterationInTest) % PRODUCT_IDS.length];
 
