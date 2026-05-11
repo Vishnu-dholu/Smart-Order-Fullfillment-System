@@ -1,0 +1,13 @@
+vault_jwt_secret: "replace-stage-jwt-secret"
+vault_internal_service_token: "replace-stage-internal-token"
+vault_google_client_id: "replace-stage-google-client-id"
+
+vault_auth_db_url: "postgresql://user:pass@host/auth_db?sslmode=require"
+vault_order_db_url: "postgresql://user:pass@host/order_db?sslmode=require"
+vault_inventory_db_url: "postgresql://user:pass@host/inventory_db?sslmode=require"
+vault_warehouse_db_url: "postgresql://user:pass@host/warehouse_db?sslmode=require"
+vault_delivery_db_url: "postgresql://user:pass@host/delivery_db?sslmode=require"
+vault_notification_db_url: "postgresql://user:pass@host/notification_db?sslmode=require"
+
+vault_smtp_email: "no-reply@example.com"
+vault_smtp_password: "replace-stage-smtp-password"

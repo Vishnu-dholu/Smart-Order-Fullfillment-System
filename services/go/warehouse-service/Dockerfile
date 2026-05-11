@@ -1,48 +1,21 @@
-# ----------------------------------
-# Stage 1: Build the Go Binary
-# ----------------------------------
-FROM golang:1.25-alpine AS builder
+# syntax=docker/dockerfile:1.7
+FROM golang:1.25.0-alpine3.21 AS build
+WORKDIR /src
 
-# Install build dependencies
-RUN apk add --no-cache git
-
-WORKDIR /app
-
-# Step 1: Download dependencies (Optimized for Docker Cache)
 COPY go.mod go.sum ./
-RUN go mod download
+RUN --mount=type=cache,target=/go/pkg/mod \
+    go mod download
 
-# Step 2: Copy the source code
 COPY . .
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+    go build -trimpath -buildvcs=false -mod=readonly -ldflags="-s -w" -o /out/microservice ./cmd/main.go
 
-# Step 3: Compile a static binary
-# -ldflags="-w -s" reduces binary size for better performance analysis
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o microservice ./cmd/main.go
-
-# ----------------------------------
-# Stage 2: Final Runtime Image
-# ----------------------------------
-FROM alpine:latest
-
-# Security: Add CA certificates for potential HTTPS calls
-RUN apk add --no-cache ca-certificates
-
+FROM gcr.io/distroless/static-debian12:nonroot
 WORKDIR /app
 
-# Create a non-root user for security best practices
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+COPY --from=build /out/microservice /app/microservice
 
-# Copy the binary from the builder
-COPY --from=builder /app/microservice /app/microservice
-
-# Ensure the binary is executable
-RUN chmod +x /app/microservice
-
-# Set ownership to the non-root user
-RUN chown -R appuser:appgroup /app
-
-USER appuser:appgroup
-
+USER nonroot:nonroot
 EXPOSE 8084
-
-CMD ["/app/microservice"]
+ENTRYPOINT ["/app/microservice"]

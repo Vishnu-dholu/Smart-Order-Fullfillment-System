@@ -1,0 +1,16 @@
+---
+- name: Deploy dockerized microservice stack
+  hosts: compose_nodes
+  become: true
+  gather_facts: true
+  vars:
+    target_env: "{{ target_env | default('dev') }}"
+    image_tag: "{{ image_tag | default('latest-ci') }}"
+  vars_files:
+    - "../group_vars/{{ target_env }}/main.yml"
+    - "../group_vars/{{ target_env }}/vault.yml"
+  roles:
+    - role: common
+    - role: docker
+    - role: vault_render
+    - role: compose_deploy

@@ -1,0 +1,2 @@
+---
+vault_env_output_path: "{{ compose_env_file_path }}"

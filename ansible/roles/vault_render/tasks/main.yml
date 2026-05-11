@@ -1,0 +1,37 @@
+---
+- name: Render root compose environment file from vault
+  ansible.builtin.template:
+    src: compose.env.j2
+    dest: "{{ vault_env_output_path }}"
+    owner: "{{ compose_runtime_user }}"
+    group: "{{ compose_runtime_group }}"
+    mode: "0600"
+
+- name: Render warehouse runtime env file
+  ansible.builtin.copy:
+    dest: "{{ compose_project_dir }}/services/go/warehouse-service/.env"
+    owner: "{{ compose_runtime_user }}"
+    group: "{{ compose_runtime_group }}"
+    mode: "0600"
+    content: |
+      DB_URL={{ vault_warehouse_db_url }}
+
+- name: Render delivery runtime env file
+  ansible.builtin.copy:
+    dest: "{{ compose_project_dir }}/services/go/delivery-service/.env"
+    owner: "{{ compose_runtime_user }}"
+    group: "{{ compose_runtime_group }}"
+    mode: "0600"
+    content: |
+      DATABASE_URL={{ vault_delivery_db_url }}
+
+- name: Render notification runtime env file
+  ansible.builtin.copy:
+    dest: "{{ compose_project_dir }}/services/go/notification-service/.env"
+    owner: "{{ compose_runtime_user }}"
+    group: "{{ compose_runtime_group }}"
+    mode: "0600"
+    content: |
+      DATABASE_URL={{ vault_notification_db_url }}
+      SMTP_EMAIL={{ vault_smtp_email }}
+      SMTP_PASSWORD={{ vault_smtp_password }}

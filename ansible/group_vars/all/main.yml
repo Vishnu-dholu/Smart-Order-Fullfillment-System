@@ -1,0 +1,19 @@
+compose_project_name: smart-order
+compose_project_dir: /opt/smart-order
+compose_releases_dir: /opt/smart-order/releases
+compose_current_link: /opt/smart-order/current
+compose_previous_link: /opt/smart-order/previous
+compose_runtime_user: root
+compose_runtime_group: root
+
+healthcheck_retries: 12
+healthcheck_delay_seconds: 5
+healthcheck_timeout_seconds: 5
+healthcheck_endpoints:
+  - "http://localhost:8080/actuator/health"
+  - "http://localhost:8081/actuator/health"
+  - "http://localhost:8082/actuator/health"
+  - "http://localhost:8083/actuator/health"
+  - "http://localhost:8084/swagger/index.html"
+  - "http://localhost:8085/swagger/index.html"
+  - "http://localhost:8086/swagger/index.html"

@@ -1,0 +1,30 @@
+---
+- name: Verify endpoint health
+  ansible.builtin.uri:
+    url: "{{ item }}"
+    method: GET
+    status_code: "{{ healthcheck_expected_http_codes }}"
+    return_content: false
+    validate_certs: false
+    timeout: "{{ healthcheck_timeout_seconds }}"
+  register: health_probe
+  retries: "{{ healthcheck_retries }}"
+  delay: "{{ healthcheck_delay_seconds }}"
+  until: health_probe.status in healthcheck_expected_http_codes
+  loop: "{{ healthcheck_endpoints }}"
+  loop_control:
+    label: "{{ item }}"
+
+- name: Inspect compose process state
+  ansible.builtin.command:
+    cmd: docker compose ps --format json
+    chdir: "{{ compose_project_dir }}"
+  register: compose_ps_output
+  changed_when: false
+
+- name: Fail when compose output contains unhealthy or exited services
+  ansible.builtin.assert:
+    that:
+      - "'unhealthy' not in compose_ps_output.stdout"
+      - "'exited' not in compose_ps_output.stdout"
+    fail_msg: "Detected unhealthy/exited containers in compose stack."

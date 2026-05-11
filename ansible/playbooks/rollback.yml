@@ -1,0 +1,12 @@
+---
+- name: Roll back dockerized microservice stack
+  hosts: compose_nodes
+  become: true
+  gather_facts: false
+  vars:
+    target_env: "{{ target_env | default('dev') }}"
+  vars_files:
+    - "../group_vars/{{ target_env }}/main.yml"
+  roles:
+    - role: rollback
+    - role: healthcheck

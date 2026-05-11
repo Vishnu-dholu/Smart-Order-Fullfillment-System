@@ -1,0 +1,10 @@
+---
+- name: Verify docker is installed
+  ansible.builtin.command: docker --version
+  register: docker_version
+  changed_when: false
+
+- name: Verify docker compose plugin is installed
+  ansible.builtin.command: docker compose version
+  register: docker_compose_version
+  changed_when: false

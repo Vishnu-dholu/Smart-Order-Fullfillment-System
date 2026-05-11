@@ -1,0 +1,40 @@
+---
+- name: Ensure previous symlink points to current when present
+  ansible.builtin.stat:
+    path: "{{ compose_current_link }}"
+  register: current_release_stat
+
+- name: Update previous symlink
+  ansible.builtin.file:
+    src: "{{ compose_current_link }}"
+    dest: "{{ compose_previous_link }}"
+    state: link
+    force: true
+  when: current_release_stat.stat.exists
+
+- name: Render compose override with image tag
+  ansible.builtin.template:
+    src: compose.override.yml.j2
+    dest: "{{ compose_project_dir }}/docker-compose.override.yml"
+    owner: "{{ compose_runtime_user }}"
+    group: "{{ compose_runtime_group }}"
+    mode: "0644"
+
+- name: Pull tagged images
+  ansible.builtin.command:
+    cmd: docker compose pull
+    chdir: "{{ compose_project_dir }}"
+  changed_when: true
+
+- name: Deploy compose stack
+  ansible.builtin.command:
+    cmd: docker compose up -d --remove-orphans
+    chdir: "{{ compose_project_dir }}"
+  changed_when: true
+
+- name: Point current link to active release id
+  ansible.builtin.file:
+    src: "{{ compose_releases_dir }}/{{ release_id }}"
+    dest: "{{ compose_current_link }}"
+    state: link
+    force: true

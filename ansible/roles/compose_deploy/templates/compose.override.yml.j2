@@ -1,0 +1,17 @@
+services:
+  api-gateway:
+    image: localhost:5001/smart-order/api-gateway:{{ image_tag }}
+  auth-service:
+    image: localhost:5001/smart-order/auth-service:{{ image_tag }}
+  inventory-service:
+    image: localhost:5001/smart-order/inventory-service:{{ image_tag }}
+  order-service:
+    image: localhost:5001/smart-order/order-service:{{ image_tag }}
+  warehouse-service:
+    image: localhost:5001/smart-order/warehouse-service:{{ image_tag }}
+  delivery-service:
+    image: localhost:5001/smart-order/delivery-service:{{ image_tag }}
+  notification-service:
+    image: localhost:5001/smart-order/notification-service:{{ image_tag }}
+  frontend:
+    image: localhost:5001/smart-order/frontend:{{ image_tag }}

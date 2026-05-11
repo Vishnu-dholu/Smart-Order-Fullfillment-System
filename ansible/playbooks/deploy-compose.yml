@@ -1,0 +1,59 @@
+---
+- name: Render secrets and deploy Docker Compose stack
+  hosts: compose_nodes
+  become: true
+  vars:
+    target_env: "{{ target_env | default('dev') }}"
+  vars_files:
+    - "../group_vars/{{ target_env }}/main.yml"
+    - "../group_vars/{{ target_env }}/vault.yml"
+  tasks:
+    - name: Ensure compose project directory exists
+      ansible.builtin.file:
+        path: "{{ compose_project_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Render runtime .env from encrypted vault vars
+      ansible.builtin.template:
+        src: "../templates/compose.env.j2"
+        dest: "{{ compose_project_dir }}/.env"
+        owner: root
+        group: root
+        mode: "0600"
+
+    - name: Render warehouse service env
+      ansible.builtin.copy:
+        dest: "{{ compose_project_dir }}/services/go/warehouse-service/.env"
+        owner: root
+        group: root
+        mode: "0600"
+        content: |
+          DB_URL={{ vault_warehouse_db_url }}
+
+    - name: Render delivery service env
+      ansible.builtin.copy:
+        dest: "{{ compose_project_dir }}/services/go/delivery-service/.env"
+        owner: root
+        group: root
+        mode: "0600"
+        content: |
+          DATABASE_URL={{ vault_delivery_db_url }}
+
+    - name: Render notification service env
+      ansible.builtin.copy:
+        dest: "{{ compose_project_dir }}/services/go/notification-service/.env"
+        owner: root
+        group: root
+        mode: "0600"
+        content: |
+          DATABASE_URL={{ vault_notification_db_url }}
+          SMTP_EMAIL={{ vault_smtp_email }}
+          SMTP_PASSWORD={{ vault_smtp_password }}
+
+    - name: Deploy compose stack
+      ansible.builtin.shell: docker compose up -d --build
+      args:
+        chdir: "{{ compose_project_dir }}"

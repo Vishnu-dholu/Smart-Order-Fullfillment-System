@@ -1,0 +1,5 @@
+deployment_env: stage
+compose_project_dir: /opt/smart-order
+release_id: "stage-{{ lookup('env', 'BUILD_NUMBER') | default('manual', true) }}"
+image_tag: latest-ci
+compose_env_file_path: "{{ compose_project_dir }}/.env"

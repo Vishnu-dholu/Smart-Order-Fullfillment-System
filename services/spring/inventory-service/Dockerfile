@@ -1,40 +1,19 @@
-# ----------------------------------
-# Stage 1: Build the Application
-# ----------------------------------
-FROM maven:3.9.6-eclipse-temurin-21 AS builder
+FROM maven:3.9.9-eclipse-temurin-21-alpine AS build
+WORKDIR /workspace
 
-WORKDIR /app
+COPY pom.xml ./
+RUN mvn -B -ntp dependency:go-offline
 
-# Copy only the pom.xml first (to cache dependencies)
-COPY pom.xml .
-
-# Download dependencies (this step is cached if pom.xml doesn't change)
-RUN mvn dependency:go-offline -B
-
-# Copy the source code
 COPY src ./src
+RUN mvn -B -ntp clean package -DskipTests
 
-#Build the JAR (skipping tests to save the time during container build)
-RUN mvn clean package -DskipTests
-
-# ----------------------------------
-# Stage 2: Run the Application
-# ----------------------------------
-# Use a smaller runtime image for the final container
-FROM eclipse-temurin:21-jre-alpine
-
+FROM eclipse-temurin:21.0.6_7-jre-alpine
 WORKDIR /app
 
-# Create a non-root user for security
 RUN addgroup -S spring && adduser -S spring -G spring
+COPY --from=build /workspace/target/*.jar /app/app.jar
+RUN chown spring:spring /app/app.jar
+
 USER spring:spring
-
-# Copy the built JAR from the 'builder' stage
-# Note: specific name matches your artifactId in pom.xml
-COPY --from=builder /app/target/*.jar app.jar
-
-# Expose the port defined in application.properties
 EXPOSE 8082
-
-# Run the application
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-XX:MaxRAMPercentage=75.0", "-jar", "/app/app.jar"]

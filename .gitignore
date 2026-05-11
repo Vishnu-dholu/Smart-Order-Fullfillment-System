@@ -1,5 +1,20 @@
 /schema.sql
 .env
+**/.env
+**/.env.*
+!**/.example.env
+!**/.env.example
+
+# Generated local secret files
+services/go/**/.env
+k8s/.env
+
+# Ansible Vault helper files (never commit)
+ansible/.vault_pass
+ansible/.vault_pass.txt
+ansible/vault-password.txt
+*.vault-pass
+*.vault_pass
 
 # IDE
 .idea/

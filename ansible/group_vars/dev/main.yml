@@ -1,0 +1,5 @@
+deployment_env: dev
+compose_project_dir: /opt/smart-order
+release_id: "dev-{{ lookup('env', 'BUILD_NUMBER') | default('manual', true) }}"
+image_tag: latest-ci
+compose_env_file_path: "{{ compose_project_dir }}/.env"

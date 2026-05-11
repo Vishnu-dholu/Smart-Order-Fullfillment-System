@@ -1,0 +1,3 @@
+---
+healthcheck_expected_http_codes:
+  - 200

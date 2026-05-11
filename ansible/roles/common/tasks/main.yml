@@ -1,0 +1,19 @@
+---
+- name: Ensure release directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ compose_runtime_user }}"
+    group: "{{ compose_runtime_group }}"
+    mode: "0755"
+  loop:
+    - "{{ compose_project_dir }}"
+    - "{{ compose_releases_dir }}"
+
+- name: Ensure current release directory exists
+  ansible.builtin.file:
+    path: "{{ compose_releases_dir }}/{{ release_id }}"
+    state: directory
+    owner: "{{ compose_runtime_user }}"
+    group: "{{ compose_runtime_group }}"
+    mode: "0755"
