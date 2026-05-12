@@ -23,7 +23,7 @@ pipeline {
     }
 
     environment {
-        REGISTRY = 'localhost:5001/smart-order'
+        REGISTRY = 'parva04'
         IMAGE_TAG = 'unset'
         ANSIBLE_CONFIG = 'ansible/ansible.cfg'
         ANSIBLE_INVENTORY = "ansible/inventories/${params.DEPLOY_ENV}/hosts.yml"
@@ -128,8 +128,8 @@ GIT_COMMIT=${env.GIT_COMMIT}
                 expression { !params.ROLLBACK_ONLY }
             }
             steps {
-                withCredentials([usernamePassword(credentialsId: 'DOCKER_REGISTRY_CREDS', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh 'echo "$DOCKER_PASS" | docker login localhost:5001 -u "$DOCKER_USER" --password-stdin'
+                withCredentials([usernamePassword(credentialsId: 'DockerHubCred', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh 'echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin'
                     script {
                         allServices.each { svc ->
                             sh "docker push ${REGISTRY}/${svc}:${IMAGE_TAG}"
