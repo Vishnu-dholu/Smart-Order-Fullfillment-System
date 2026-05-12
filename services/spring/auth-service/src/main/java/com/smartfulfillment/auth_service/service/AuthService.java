@@ -134,8 +134,8 @@ public class AuthService {
 
             return new AuthResponse(jwtToken);
 
-        } catch (GeneralSecurityException | IOException e){
-            throw new RuntimeException("Failed to verify Google Token", e);
+        } catch (GeneralSecurityException | IOException | IllegalArgumentException e){
+            throw new RuntimeException("Failed to verify Google Token: " + e.getMessage(), e);
         }
     }
 }
