@@ -10,7 +10,10 @@ pipeline {
         disableConcurrentBuilds()
         timestamps()
         timeout(time: 60, unit: 'MINUTES')
-        parallelsAlwaysFailFast()
+    }
+
+    triggers {
+        githubPush()
     }
 
     parameters {
@@ -53,12 +56,11 @@ GIT_COMMIT=${env.GIT_COMMIT}
             }
         }
 
-        stage('03 - Build Images (Parallel)') {
+        stage('03 - Build Images (Sequential)') {
             when {
                 expression { !params.ROLLBACK_ONLY }
             }
-            failFast true
-            parallel {
+            stages {
                 stage('03.1 - Build Frontend') {
                     steps {
                         sh """
@@ -70,34 +72,31 @@ GIT_COMMIT=${env.GIT_COMMIT}
                     }
                 }
                 stage('03.2 - Build Spring Services') {
-                    failFast true
-                    parallel {
-                        stage('Build api-gateway') { steps { sh "docker build --build-arg BUILDKIT_INLINE_CACHE=1 -t ${REGISTRY}/api-gateway:${IMAGE_TAG} -f services/spring/api-gateway/Dockerfile services/spring/api-gateway" } }
-                        stage('Build auth-service') { steps { sh "docker build --build-arg BUILDKIT_INLINE_CACHE=1 -t ${REGISTRY}/auth-service:${IMAGE_TAG} -f services/spring/auth-service/Dockerfile services/spring/auth-service" } }
-                        stage('Build inventory-service') { steps { sh "docker build --build-arg BUILDKIT_INLINE_CACHE=1 -t ${REGISTRY}/inventory-service:${IMAGE_TAG} -f services/spring/inventory-service/Dockerfile services/spring/inventory-service" } }
-                        stage('Build order-service') { steps { sh "docker build --build-arg BUILDKIT_INLINE_CACHE=1 -t ${REGISTRY}/order-service:${IMAGE_TAG} -f services/spring/order-service/Dockerfile services/spring/order-service" } }
+                    steps {
+                        sh "docker build --build-arg BUILDKIT_INLINE_CACHE=1 -t ${REGISTRY}/api-gateway:${IMAGE_TAG} -f services/spring/api-gateway/Dockerfile services/spring/api-gateway"
+                        sh "docker build --build-arg BUILDKIT_INLINE_CACHE=1 -t ${REGISTRY}/auth-service:${IMAGE_TAG} -f services/spring/auth-service/Dockerfile services/spring/auth-service"
+                        sh "docker build --build-arg BUILDKIT_INLINE_CACHE=1 -t ${REGISTRY}/inventory-service:${IMAGE_TAG} -f services/spring/inventory-service/Dockerfile services/spring/inventory-service"
+                        sh "docker build --build-arg BUILDKIT_INLINE_CACHE=1 -t ${REGISTRY}/order-service:${IMAGE_TAG} -f services/spring/order-service/Dockerfile services/spring/order-service"
                     }
                 }
                 stage('03.3 - Build Go Services') {
-                    failFast true
-                    parallel {
-                        stage('Build warehouse-service') { steps { sh "docker build --build-arg BUILDKIT_INLINE_CACHE=1 -t ${REGISTRY}/warehouse-service:${IMAGE_TAG} -f services/go/warehouse-service/Dockerfile services/go/warehouse-service" } }
-                        stage('Build delivery-service') { steps { sh "docker build --build-arg BUILDKIT_INLINE_CACHE=1 -t ${REGISTRY}/delivery-service:${IMAGE_TAG} -f services/go/delivery-service/Dockerfile services/go/delivery-service" } }
-                        stage('Build notification-service') { steps { sh "docker build --build-arg BUILDKIT_INLINE_CACHE=1 -t ${REGISTRY}/notification-service:${IMAGE_TAG} -f services/go/notification-service/Dockerfile services/go/notification-service" } }
+                    steps {
+                        sh "docker build --build-arg BUILDKIT_INLINE_CACHE=1 -t ${REGISTRY}/warehouse-service:${IMAGE_TAG} -f services/go/warehouse-service/Dockerfile services/go/warehouse-service"
+                        sh "docker build --build-arg BUILDKIT_INLINE_CACHE=1 -t ${REGISTRY}/delivery-service:${IMAGE_TAG} -f services/go/delivery-service/Dockerfile services/go/delivery-service"
+                        sh "docker build --build-arg BUILDKIT_INLINE_CACHE=1 -t ${REGISTRY}/notification-service:${IMAGE_TAG} -f services/go/notification-service/Dockerfile services/go/notification-service"
                     }
                 }
             }
         }
 
-        stage('04 - Unit & Integration Tests (Parallel)') {
+        stage('04 - Unit & Integration Tests (Sequential)') {
             when {
                 allOf {
                     expression { !params.ROLLBACK_ONLY }
                     expression { !params.SKIP_TESTS }
                 }
             }
-            failFast true
-            parallel {
+            stages {
                 stage('04.1 - Frontend Tests') {
                     steps {
                         dir('frontend') {
@@ -107,20 +106,18 @@ GIT_COMMIT=${env.GIT_COMMIT}
                     }
                 }
                 stage('04.2 - Spring Tests') {
-                    failFast true
-                    parallel {
-                        stage('Test auth-service') { steps { dir('services/spring/auth-service') { sh './mvnw -B -ntp test' } } }
-                        stage('Test inventory-service') { steps { dir('services/spring/inventory-service') { sh './mvnw -B -ntp test' } } }
-                        stage('Test order-service') { steps { dir('services/spring/order-service') { sh './mvnw -B -ntp test' } } }
-                        stage('Test api-gateway') { steps { dir('services/spring/api-gateway') { sh '[ -x ./mvnw ] && ./mvnw -B -ntp test || mvn -B -ntp test' } } }
+                    steps {
+                        dir('services/spring/auth-service') { sh './mvnw -B -ntp test' }
+                        dir('services/spring/inventory-service') { sh './mvnw -B -ntp test' }
+                        dir('services/spring/order-service') { sh './mvnw -B -ntp test' }
+                        dir('services/spring/api-gateway') { sh '[ -x ./mvnw ] && ./mvnw -B -ntp test || mvn -B -ntp test' }
                     }
                 }
                 stage('04.3 - Go Tests') {
-                    failFast true
-                    parallel {
-                        stage('Test warehouse-service') { steps { dir('services/go/warehouse-service') { sh 'go test ./... -count=1' } } }
-                        stage('Test delivery-service') { steps { dir('services/go/delivery-service') { sh 'go test ./... -count=1' } } }
-                        stage('Test notification-service') { steps { dir('services/go/notification-service') { sh 'go test ./... -count=1' } } }
+                    steps {
+                        dir('services/go/warehouse-service') { sh 'go test ./... -count=1' }
+                        dir('services/go/delivery-service') { sh 'go test ./... -count=1' }
+                        dir('services/go/notification-service') { sh 'go test ./... -count=1' }
                     }
                 }
             }
@@ -134,15 +131,11 @@ GIT_COMMIT=${env.GIT_COMMIT}
                 withCredentials([usernamePassword(credentialsId: 'DOCKER_REGISTRY_CREDS', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh 'echo "$DOCKER_PASS" | docker login localhost:5001 -u "$DOCKER_USER" --password-stdin'
                     script {
-                        def pushStages = [:]
                         allServices.each { svc ->
-                            pushStages["Push ${svc}"] = {
-                                sh "docker push ${REGISTRY}/${svc}:${IMAGE_TAG}"
-                                sh "docker tag ${REGISTRY}/${svc}:${IMAGE_TAG} ${REGISTRY}/${svc}:latest-ci"
-                                sh "docker push ${REGISTRY}/${svc}:latest-ci"
-                            }
+                            sh "docker push ${REGISTRY}/${svc}:${IMAGE_TAG}"
+                            sh "docker tag ${REGISTRY}/${svc}:${IMAGE_TAG} ${REGISTRY}/${svc}:latest-ci"
+                            sh "docker push ${REGISTRY}/${svc}:latest-ci"
                         }
-                        parallel pushStages
                     }
                 }
             }
@@ -154,13 +147,9 @@ GIT_COMMIT=${env.GIT_COMMIT}
             }
             steps {
                 script {
-                    def loadStages = [:]
                     allServices.each { svc ->
-                        loadStages["Load ${svc}"] = {
-                            sh "minikube image load ${REGISTRY}/${svc}:${IMAGE_TAG} || true"
-                        }
+                        sh "minikube image load ${REGISTRY}/${svc}:${IMAGE_TAG} || true"
                     }
-                    parallel loadStages
                 }
             }
         }
