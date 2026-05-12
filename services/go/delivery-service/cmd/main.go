@@ -45,7 +45,11 @@ func main() {
 
 	// CORS Configuration
 	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{"http://localhost:5173"}
+	corsOrigin := os.Getenv("CORS_ALLOWED_ORIGINS")
+	if corsOrigin == "" {
+		corsOrigin = "http://localhost:5173"
+	}
+	config.AllowOrigins = []string{corsOrigin}
 	config.AllowMethods = []string{"GET", "POST", "PUT"}
 	config.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "X-User-Id", "X-User-Role"}
 	config.AllowCredentials = true

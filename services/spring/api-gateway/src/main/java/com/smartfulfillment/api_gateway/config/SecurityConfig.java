@@ -48,6 +48,8 @@ public class SecurityConfig {
                         .pathMatchers(HttpMethod.PUT, "/api/orders/*/status").hasAnyRole("ADMIN", "WAREHOUSE_MANAGER")
                         .pathMatchers(HttpMethod.GET, "/api/warehouse/stock/**").hasAnyRole("ADMIN", "WAREHOUSE_MANAGER")
                         .pathMatchers(HttpMethod.POST, "/api/warehouse/**").hasAnyRole("ADMIN", "WAREHOUSE_MANAGER")
+                        .pathMatchers("/api/delivery/**").authenticated()
+                        .pathMatchers("/api/notification/**").authenticated()
                         .anyExchange().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwtSpec ->

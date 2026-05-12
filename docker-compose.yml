@@ -2,7 +2,9 @@ version: '3.8'
 
 services:
   api-gateway:
-    build: ./services/spring/api-gateway
+    build:
+      context: ./services/spring/api-gateway
+      network: host
     container_name: api-gateway
     ports:
       - '8080:8080'
@@ -24,10 +26,12 @@ services:
   # ⚛️ FRONTEND
   # ==========================================
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      network: host
     container_name: smart-order-frontend
     ports:
-      - '5173:80'
+      - '5173:8080'
     networks:
       - microservices-net
 
@@ -35,7 +39,9 @@ services:
   # ☕ JAVA MICROSERVICES (Spring Boot)
   # ==========================================
   auth-service:
-    build: ./services/spring/auth-service
+    build:
+      context: ./services/spring/auth-service
+      network: host
     container_name: auth-service
     ports:
       - '8081:8081'
@@ -43,7 +49,9 @@ services:
       - microservices-net
 
   inventory-service:
-    build: ./services/spring/inventory-service
+    build:
+      context: ./services/spring/inventory-service
+      network: host
     container_name: inventory-service
     ports:
       - '8082:8082'
@@ -53,7 +61,9 @@ services:
       - microservices-net
 
   order-service:
-    build: ./services/spring/order-service
+    build:
+      context: ./services/spring/order-service
+      network: host
     container_name: order-service
     ports:
       - '8083:8083'
@@ -71,38 +81,50 @@ services:
   # 🐹 GO MICROSERVICES
   # ==========================================
   warehouse-service:
-    build: ./services/go/warehouse-service
+    build:
+      context: ./services/go/warehouse-service
+      network: host
     container_name: warehouse-service
     ports:
       - '8084:8084'
     env_file:
       - ./services/go/warehouse-service/.env
     environment:
+      - DB_URL=${WAREHOUSE_DB_URL}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:5173}
       - INVENTORY_SERVICE_URL=http://inventory-service:8082
       - INTERNAL_SERVICE_TOKEN=${INTERNAL_SERVICE_TOKEN:-smartfill-internal-token}
     networks:
       - microservices-net
 
   delivery-service:
-    build: ./services/go/delivery-service
+    build:
+      context: ./services/go/delivery-service
+      network: host
     container_name: delivery-service
     ports:
       - '8085:8085'
     env_file:
       - ./services/go/delivery-service/.env
     environment:
+      - DATABASE_URL=${DELIVERY_DB_URL}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:5173}
       - INTERNAL_SERVICE_TOKEN=${INTERNAL_SERVICE_TOKEN:-smartfill-internal-token}
     networks:
       - microservices-net
 
   notification-service:
-    build: ./services/go/notification-service
+    build:
+      context: ./services/go/notification-service
+      network: host
     container_name: notification-service
     ports:
       - '8086:8086'
     env_file:
       - ./services/go/notification-service/.env
     environment:
+      - DATABASE_URL=${NOTIFICATION_DB_URL}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:5173}
       - INTERNAL_SERVICE_TOKEN=${INTERNAL_SERVICE_TOKEN:-smartfill-internal-token}
     networks:
       - microservices-net

@@ -41,7 +41,11 @@ func main() {
 
 	// CORS Configuration
 	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{"*"} // Internal microservice, open CORS is fine for now
+	corsOrigin := os.Getenv("CORS_ALLOWED_ORIGINS")
+	if corsOrigin == "" {
+		corsOrigin = "http://localhost:5173"
+	}
+	config.AllowOrigins = []string{corsOrigin} // Read from env with fallback
 	config.AllowMethods = []string{"GET", "POST"}
 	config.AllowHeaders = []string{"Origin", "Content-Type", "Accept"}
 	r.Use(cors.New(config))

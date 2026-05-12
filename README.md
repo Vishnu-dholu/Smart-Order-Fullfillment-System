@@ -83,3 +83,42 @@ The project includes a `Jenkinsfile` that orchestrates the build and deployment 
 *   It builds Docker images for all services.
 *   It loads the images directly into Minikube (`minikube image load`).
 *   It executes the Ansible playbook to roll out the new images to the Kubernetes cluster.
+
+## Applying Code Changes (Development Workflow)
+
+When you modify code in a microservice and want to test it locally in Minikube without running the full Jenkins pipeline, follow these steps:
+
+1. **Build the new Docker image:**
+   ```bash
+   # Example for auth-service
+   docker build --network=host -t localhost:5001/smart-order/auth-service:dev-update -f services/spring/auth-service/Dockerfile services/spring/auth-service
+   ```
+
+2. **Load the image into Minikube:**
+   ```bash
+   minikube image load localhost:5001/smart-order/auth-service:dev-update
+   ```
+
+3. **Update the Kubernetes Deployment:**
+   ```bash
+   kubectl set image deployment/auth-service auth-service=localhost:5001/smart-order/auth-service:dev-update -n smart-order
+   ```
+   *Kubernetes will automatically roll out the new pods using the updated image.*
+
+## Troubleshooting
+
+### 1. Pods stuck in `ImagePullBackOff` or `ErrImagePull`
+*   **Cause:** Kubernetes is trying to pull an image from a remote registry (like `localhost:5001` which points to the Minikube node itself, not your host) and failing.
+*   **Fix:** Ensure your deployments are using `imagePullPolicy: IfNotPresent` (not `Always`). Make sure you have loaded the image into Minikube using `minikube image load <image-name>`.
+
+### 2. Google Sign-In Error: `The given origin is not allowed for the given client ID`
+*   **Cause:** You are accessing the app via `http://localhost:8888`, but this URL is either missing from your Google Cloud Console's "Authorized JavaScript origins", or the change hasn't propagated yet.
+*   **Fix:** Add `http://localhost:8888` to the Google Console. Note that it can take 5 minutes to a few hours for Google to propagate this change. Clearing your browser cache or using Incognito mode can help.
+
+### 3. API calls returning `403 Forbidden`
+*   **Cause:** This usually happens if the frontend fails to acquire a valid Google token (due to the error above) and sends an empty or invalid token to the API Gateway.
+*   **Fix:** Resolve the Google Sign-in origin issue first. Ensure the `api-gateway` and downstream microservices have the correct CORS configuration matching your frontend URL.
+
+### 4. NGINX Ingress Port-Forwarding Drops
+*   **Cause:** `kubectl port-forward` processes can sometimes drop if left idle.
+*   **Fix:** Simply restart the port-forward command: `kubectl port-forward service/ingress-nginx-controller 8888:80 -n ingress-nginx`

@@ -10,6 +10,7 @@ package main
 
 import (
 	"log"
+	"os"
 
 	_ "github.com/smartfulfillment/warehouse-service/docs"
 	swaggerFiles "github.com/swaggo/files"
@@ -40,7 +41,11 @@ func main() {
 
 	// --- CORS MIDDLEWARE ---
 	corsConfig := cors.DefaultConfig()
-	corsConfig.AllowOrigins = []string{"http://localhost:5173"}
+	corsOrigin := os.Getenv("CORS_ALLOWED_ORIGINS")
+	if corsOrigin == "" {
+		corsOrigin = "http://localhost:5173"
+	}
+	corsConfig.AllowOrigins = []string{corsOrigin}
 	corsConfig.AllowMethods = []string{"GET", "POST", "OPTIONS", "PUT", "PATCH", "DELETE"}
 	corsConfig.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization", "X-User-Id", "X-User-Role"}
 	corsConfig.AllowCredentials = true
