@@ -1,0 +1,35 @@
+---
+# Preflight checks — ensure kubectl and minikube are available on the target host.
+
+- name: Verify kubectl is installed
+  ansible.builtin.command: kubectl version --client --output=yaml
+  register: kubectl_version
+  changed_when: false
+
+- name: Show kubectl version
+  ansible.builtin.debug:
+    msg: "{{ kubectl_version.stdout_lines[:3] }}"
+
+- name: Verify minikube is running
+  ansible.builtin.command: minikube status --format='{{ "{{" }}.Host{{ "}}" }}'
+  register: minikube_status
+  changed_when: false
+
+- name: Fail if minikube is not running
+  ansible.builtin.fail:
+    msg: >-
+      Minikube is not running. Start it with:
+      minikube start --insecure-registry="localhost:5001"
+  when: minikube_status.stdout != 'Running'
+
+- name: Ensure smart-order namespace exists
+  ansible.builtin.command:
+    cmd: kubectl create namespace {{ k8s_namespace }} --dry-run=client -o yaml
+  register: ns_manifest
+  changed_when: false
+
+- name: Apply namespace
+  ansible.builtin.command:
+    cmd: kubectl apply -f -
+    stdin: "{{ ns_manifest.stdout }}"
+  changed_when: true

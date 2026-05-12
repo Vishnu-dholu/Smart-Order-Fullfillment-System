@@ -6,6 +6,24 @@ compose_previous_link: /opt/smart-order/previous
 compose_runtime_user: root
 compose_runtime_group: root
 
+# ==============================================
+# Kubernetes / Minikube settings
+# ==============================================
+k8s_namespace: smart-order
+k8s_manifests_dir: k8s
+project_src_dir: /opt/smart-order
+k8s_registry: localhost:5001/smart-order
+
+k8s_all_services:
+  - frontend
+  - api-gateway
+  - auth-service
+  - inventory-service
+  - order-service
+  - warehouse-service
+  - delivery-service
+  - notification-service
+
 healthcheck_retries: 12
 healthcheck_delay_seconds: 5
 healthcheck_timeout_seconds: 5

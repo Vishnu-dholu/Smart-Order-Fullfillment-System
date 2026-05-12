@@ -8,10 +8,6 @@ resources:
   - all-services.yaml
   - ingress.yaml
 
-secretGenerator:
-  - name: smart-order-secrets
-    envs:
-      - .env
-
-generatorOptions:
-  disableNameSuffixHash: true
+# Secrets are managed by Ansible (k8s_secrets role) via kubectl create secret.
+# The secretGenerator has been removed to avoid conflicts with Ansible-managed secrets.
+# Image tags are set by Ansible (k8s_deploy role) via kubectl set image.

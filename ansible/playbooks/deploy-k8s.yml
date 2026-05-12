@@ -1,0 +1,17 @@
+---
+- name: Deploy microservices to Kubernetes (Minikube)
+  hosts: k8s_nodes
+  become: true
+  gather_facts: true
+  vars:
+    target_env: "{{ target_env | default('dev') }}"
+    image_tag: "{{ image_tag | default('latest-ci') }}"
+  vars_files:
+    - "../group_vars/all/main.yml"
+    - "../group_vars/{{ target_env }}/main.yml"
+    - "../group_vars/{{ target_env }}/vault.yml"
+  roles:
+    - role: k8s_preflight
+    - role: k8s_secrets
+    - role: k8s_deploy
+    - role: k8s_verify

@@ -1,0 +1,32 @@
+---
+# Deploy microservices to Kubernetes using Kustomize manifests.
+# Image tags are updated via `kubectl set image` after the manifests are applied.
+
+- name: Apply Kustomize manifests to cluster
+  ansible.builtin.shell:
+    cmd: "kubectl apply -k {{ (project_src_dir ~ '/' ~ k8s_manifests_dir) | quote }}"
+  register: apply_result
+  changed_when: "'configured' in apply_result.stdout or 'created' in apply_result.stdout"
+
+- name: Show applied resources
+  ansible.builtin.debug:
+    msg: "{{ apply_result.stdout_lines }}"
+
+- name: Set image tag for each deployment
+  ansible.builtin.command:
+    cmd: >-
+      kubectl set image deployment/{{ item }}
+      {{ item }}={{ k8s_registry }}/{{ item }}:{{ image_tag }}
+      --namespace={{ k8s_namespace }}
+  loop: "{{ k8s_all_services }}"
+  register: set_image_result
+  changed_when: "'image updated' in set_image_result.stderr or set_image_result.rc == 0"
+
+- name: Wait for each deployment rollout to complete
+  ansible.builtin.command:
+    cmd: >-
+      kubectl rollout status deployment/{{ item }}
+      --namespace={{ k8s_namespace }}
+      --timeout={{ k8s_rollout_timeout }}
+  loop: "{{ k8s_all_services }}"
+  changed_when: false

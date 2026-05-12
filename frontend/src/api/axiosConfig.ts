@@ -1,4 +1,12 @@
-import axios, { type AxiosInstance } from 'axios';
+import axios, { type AxiosInstance, type InternalAxiosRequestConfig } from 'axios';
+
+/** Under /api: do not send Bearer (gateway JWT filter runs before permitAll for invalid tokens). */
+function isPublicAuthRequest(config: InternalAxiosRequestConfig): boolean {
+  const raw = (config.url ?? '').split('?')[0];
+  const path = raw.startsWith('/') ? raw : `/${raw}`;
+  const publicPaths = ['/auth/login', '/auth/register', '/auth/google'];
+  return publicPaths.some((p) => path === p || path.endsWith(p));
+}
 
 // Factory function to create configured Axios clients
 const createApiClient = (baseURL: string | undefined, defaultURL: string): AxiosInstance => {
@@ -13,8 +21,9 @@ const createApiClient = (baseURL: string | undefined, defaultURL: string): Axios
     (config) => {
       const token = localStorage.getItem('token');
 
-      // Gateway validates JWT and injects trusted identity headers downstream.
-      if (token) {
+      // Gateway validates JWT on any Authorization: Bearer header (oauth2ResourceServer).
+      // A stale or wrong-environment token would block login unless we omit it here.
+      if (token && !isPublicAuthRequest(config)) {
         config.headers.Authorization = `Bearer ${token}`;
       }
 

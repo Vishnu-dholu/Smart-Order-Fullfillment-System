@@ -1,0 +1,3 @@
+---
+k8s_verify_retries: 15
+k8s_verify_delay_seconds: 10

@@ -1,0 +1,12 @@
+---
+- name: Verify Kubernetes deployment health
+  hosts: k8s_nodes
+  become: true
+  gather_facts: false
+  vars:
+    target_env: "{{ target_env | default('dev') }}"
+  vars_files:
+    - "../group_vars/all/main.yml"
+    - "../group_vars/{{ target_env }}/main.yml"
+  roles:
+    - role: k8s_verify

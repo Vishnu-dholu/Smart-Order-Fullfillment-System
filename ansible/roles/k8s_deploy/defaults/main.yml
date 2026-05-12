@@ -1,0 +1,13 @@
+---
+k8s_manifests_dir: k8s
+k8s_rollout_timeout: 180s
+
+k8s_all_services:
+  - frontend
+  - api-gateway
+  - auth-service
+  - inventory-service
+  - order-service
+  - warehouse-service
+  - delivery-service
+  - notification-service

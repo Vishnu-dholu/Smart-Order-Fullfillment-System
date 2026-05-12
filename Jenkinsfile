@@ -22,7 +22,6 @@ pipeline {
     environment {
         REGISTRY = 'localhost:5001/smart-order'
         IMAGE_TAG = 'unset'
-        COMPOSE_PROJECT_NAME = "smart-order-${params.DEPLOY_ENV}"
         ANSIBLE_CONFIG = 'ansible/ansible.cfg'
         ANSIBLE_INVENTORY = "ansible/inventories/${params.DEPLOY_ENV}/hosts.yml"
     }
@@ -127,7 +126,7 @@ GIT_COMMIT=${env.GIT_COMMIT}
             }
         }
 
-        stage('05 - Push Images (Parallel)') {
+        stage('05 - Push Images to Registry') {
             when {
                 expression { !params.ROLLBACK_ONLY }
             }
@@ -149,7 +148,24 @@ GIT_COMMIT=${env.GIT_COMMIT}
             }
         }
 
-        stage('06 - Deploy via Ansible') {
+        stage('06 - Load Images into Minikube') {
+            when {
+                expression { !params.ROLLBACK_ONLY }
+            }
+            steps {
+                script {
+                    def loadStages = [:]
+                    allServices.each { svc ->
+                        loadStages["Load ${svc}"] = {
+                            sh "minikube image load ${REGISTRY}/${svc}:${IMAGE_TAG} || true"
+                        }
+                    }
+                    parallel loadStages
+                }
+            }
+        }
+
+        stage('07 - Deploy to Kubernetes via Ansible') {
             steps {
                 script {
                     withCredentials([
@@ -182,24 +198,24 @@ vault_notification_db_url: "${NOTIFICATION_DB_URL}"
 vault_smtp_email: "${SMTP_EMAIL}"
 vault_smtp_password: "${SMTP_PASSWORD}"
 EOF
-                          ansible-vault encrypt --vault-password-file "$VAULT_FILE" ansible/group_vars/${params.DEPLOY_ENV}/vault.yml
+                          ansible-vault encrypt --vault-password-file "\$VAULT_FILE" ansible/group_vars/${params.DEPLOY_ENV}/vault.yml
                         """
 
                         try {
                             if (params.ROLLBACK_ONLY) {
                                 sh """
-                                  ansible-playbook -i ${ANSIBLE_INVENTORY} ansible/playbooks/rollback.yml \
+                                  ansible-playbook -i ${ANSIBLE_INVENTORY} ansible/playbooks/rollback-k8s.yml \
                                     -e target_env=${params.DEPLOY_ENV} \
-                                    --vault-password-file "$VAULT_FILE" \
-                                    --private-key "$ANSIBLE_KEY" -u "$ANSIBLE_USER"
+                                    --vault-password-file "\$VAULT_FILE" \
+                                    --private-key "\$ANSIBLE_KEY" -u "\$ANSIBLE_USER"
                                 """
                             } else {
                                 sh """
-                                  ansible-playbook -i ${ANSIBLE_INVENTORY} ansible/playbooks/deploy.yml \
+                                  ansible-playbook -i ${ANSIBLE_INVENTORY} ansible/playbooks/deploy-k8s.yml \
                                     -e target_env=${params.DEPLOY_ENV} \
                                     -e image_tag=${IMAGE_TAG} \
-                                    --vault-password-file "$VAULT_FILE" \
-                                    --private-key "$ANSIBLE_KEY" -u "$ANSIBLE_USER"
+                                    --vault-password-file "\$VAULT_FILE" \
+                                    --private-key "\$ANSIBLE_KEY" -u "\$ANSIBLE_USER"
                                 """
                             }
                         } finally {
@@ -210,7 +226,7 @@ EOF
             }
         }
 
-        stage('07 - Verify (Ansible Health Checks)') {
+        stage('08 - Verify (Ansible Health Checks)') {
             when {
                 expression { !params.ROLLBACK_ONLY }
             }
@@ -219,9 +235,9 @@ EOF
                     sshUserPrivateKey(credentialsId: 'ANSIBLE_SSH_KEY', keyFileVariable: 'ANSIBLE_KEY', usernameVariable: 'ANSIBLE_USER')
                 ]) {
                     sh """
-                      ansible-playbook -i ${ANSIBLE_INVENTORY} ansible/playbooks/verify.yml \
+                      ansible-playbook -i ${ANSIBLE_INVENTORY} ansible/playbooks/verify-k8s.yml \
                         -e target_env=${params.DEPLOY_ENV} \
-                        --private-key "$ANSIBLE_KEY" -u "$ANSIBLE_USER"
+                        --private-key "\$ANSIBLE_KEY" -u "\$ANSIBLE_USER"
                     """
                 }
             }
@@ -231,27 +247,27 @@ EOF
     post {
         failure {
             script {
-                echo 'Pipeline failed. Attempting rollback playbook...'
+                echo 'Pipeline failed. Attempting Kubernetes rollback via Ansible...'
                 withCredentials([
                     file(credentialsId: 'ANSIBLE_VAULT_PASSWORD_FILE', variable: 'VAULT_FILE'),
                     sshUserPrivateKey(credentialsId: 'ANSIBLE_SSH_KEY', keyFileVariable: 'ANSIBLE_KEY', usernameVariable: 'ANSIBLE_USER')
                 ]) {
                     sh """
-                      ansible-playbook -i ${ANSIBLE_INVENTORY} ansible/playbooks/rollback.yml \
+                      ansible-playbook -i ${ANSIBLE_INVENTORY} ansible/playbooks/rollback-k8s.yml \
                         -e target_env=${params.DEPLOY_ENV} \
-                        --vault-password-file "$VAULT_FILE" \
-                        --private-key "$ANSIBLE_KEY" -u "$ANSIBLE_USER" || true
+                        --vault-password-file "\$VAULT_FILE" \
+                        --private-key "\$ANSIBLE_KEY" -u "\$ANSIBLE_USER" || true
                     """
                 }
             }
         }
         always {
-            sh 'docker images --format "{{.Repository}}:{{.Tag}} {{.Size}}" | rg "smart-order" || true'
-            sh 'docker compose ps || true'
+            sh 'kubectl get pods -n smart-order 2>/dev/null || true'
+            sh 'kubectl get deployments -n smart-order 2>/dev/null || true'
             cleanWs(deleteDirs: true, notFailBuild: true)
         }
         success {
-            echo "Deployment succeeded for ${params.DEPLOY_ENV} with image tag ${IMAGE_TAG}"
+            echo "Kubernetes deployment succeeded for ${params.DEPLOY_ENV} with image tag ${IMAGE_TAG}"
         }
     }
 }

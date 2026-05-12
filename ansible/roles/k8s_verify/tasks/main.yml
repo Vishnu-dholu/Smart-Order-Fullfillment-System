@@ -1,0 +1,66 @@
+---
+# Post-deploy verification — ensure all pods are healthy and running.
+
+- name: Wait for all pods to be in Running state
+  ansible.builtin.command:
+    cmd: >-
+      kubectl get pods --namespace={{ k8s_namespace }}
+      --field-selector=status.phase!=Running,status.phase!=Succeeded
+      --no-headers
+  register: unhealthy_pods
+  retries: "{{ k8s_verify_retries }}"
+  delay: "{{ k8s_verify_delay_seconds }}"
+  until: unhealthy_pods.stdout | trim | length == 0
+  changed_when: false
+
+- name: Get final pod status
+  ansible.builtin.command:
+    cmd: kubectl get pods --namespace={{ k8s_namespace }} -o wide
+  register: pod_status
+  changed_when: false
+
+- name: Display pod status
+  ansible.builtin.debug:
+    msg: "{{ pod_status.stdout_lines }}"
+
+- name: Verify all deployments have desired replicas available
+  ansible.builtin.command:
+    cmd: >-
+      kubectl get deployments --namespace={{ k8s_namespace }}
+      -o jsonpath='{range .items[*]}{.metadata.name}: {.status.availableReplicas}/{.status.replicas}{"\n"}{end}'
+  register: deployment_status
+  changed_when: false
+
+- name: Display deployment replica status
+  ansible.builtin.debug:
+    msg: "{{ deployment_status.stdout_lines }}"
+
+- name: Fail if any deployment has zero available replicas
+  ansible.builtin.shell: |
+    kubectl get deployments --namespace={{ k8s_namespace }} -o json \
+      | python3 -c "
+    import sys, json
+    data = json.load(sys.stdin)
+    failed = []
+    for d in data['items']:
+        name = d['metadata']['name']
+        available = d['status'].get('availableReplicas', 0)
+        desired = d['spec'].get('replicas', 1)
+        if available < desired:
+            failed.append(f'{name}: {available}/{desired}')
+    if failed:
+        print('Unhealthy deployments: ' + ', '.join(failed))
+        sys.exit(1)
+    print('All deployments healthy')
+    "
+  changed_when: false
+
+- name: Get service endpoints
+  ansible.builtin.command:
+    cmd: kubectl get services --namespace={{ k8s_namespace }}
+  register: svc_status
+  changed_when: false
+
+- name: Display service endpoints
+  ansible.builtin.debug:
+    msg: "{{ svc_status.stdout_lines }}"

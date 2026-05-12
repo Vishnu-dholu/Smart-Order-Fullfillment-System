@@ -1,0 +1,32 @@
+---
+# Roll back all deployments to their previous revision using Kubernetes native rollback.
+
+- name: Show current deployment revisions before rollback
+  ansible.builtin.command:
+    cmd: >-
+      kubectl get deployments --namespace={{ k8s_namespace }}
+      -o jsonpath='{range .items[*]}{.metadata.name}: revision={.metadata.annotations.deployment\.kubernetes\.io/revision}{"\n"}{end}'
+  register: pre_rollback_revisions
+  changed_when: false
+
+- name: Display pre-rollback revisions
+  ansible.builtin.debug:
+    msg: "{{ pre_rollback_revisions.stdout_lines }}"
+
+- name: Roll back each deployment to previous revision
+  ansible.builtin.command:
+    cmd: >-
+      kubectl rollout undo deployment/{{ item }}
+      --namespace={{ k8s_namespace }}
+  loop: "{{ k8s_all_services }}"
+  register: rollback_result
+  changed_when: true
+
+- name: Wait for rollback to complete
+  ansible.builtin.command:
+    cmd: >-
+      kubectl rollout status deployment/{{ item }}
+      --namespace={{ k8s_namespace }}
+      --timeout={{ k8s_rollback_timeout }}
+  loop: "{{ k8s_all_services }}"
+  changed_when: false

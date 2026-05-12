@@ -156,9 +156,7 @@ export const LoginPage = () => {
               shape="rectangular"
               width="380"
             />
-            {isLoading && (
-              <div className="text-xs text-slate-500">Connecting to Google...</div>
-            )}
+            {isLoading && <div className="text-xs text-slate-500">Connecting to Google...</div>}
           </div>
         </form>
 

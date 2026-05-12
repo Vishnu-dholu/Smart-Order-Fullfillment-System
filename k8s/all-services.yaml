@@ -215,7 +215,7 @@ kind: Service
 metadata: { name: frontend, namespace: smart-order }
 spec:
   selector: { app: frontend }
-  ports: [{ port: 80, targetPort: 80 }]
+  ports: [{ port: 80, targetPort: 8080 }]
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -230,4 +230,4 @@ spec:
         - name: frontend
           image: localhost:5001/smart-order/frontend:latest
           imagePullPolicy: IfNotPresent
-          ports: [{ containerPort: 80 }]
+          ports: [{ containerPort: 8080 }]
