@@ -10,7 +10,7 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**") // Apply to all endpoints (like /orders)
-                .allowedOrigins("http://localhost:5173") // Allow your React app
+                .allowedOrigins("http://localhost:5173", "http://localhost", "http://localhost:8080", "http://localhost:8888")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true); // CRITICAL: Matches 'withCredentials: true' in Axios

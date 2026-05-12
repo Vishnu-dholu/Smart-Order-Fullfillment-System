@@ -49,7 +49,9 @@ public class SecurityConfig {
         // Allow your specific frontend URL
         configuration.setAllowedOrigins(List.of(
                 "http://localhost:5173", // for local UI development
-                "http://localhost" // for Kubernetes Ingress
+                "http://localhost",      // for Kubernetes Ingress
+                "http://localhost:8080", // for port-forward access
+                "http://localhost:8888"  // for ingress port-forward
         ));
 
         // Allow standard HTTP methods
