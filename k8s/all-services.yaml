@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: api-gateway
-          image: localhost:5001/smart-order/api-gateway:latest
+          image: parva04/api-gateway:latest
           imagePullPolicy: IfNotPresent
           ports: [{ containerPort: 8080 }]
           envFrom: [{ secretRef: { name: smart-order-secrets } }]
@@ -54,7 +54,7 @@ spec:
     spec:
       containers:
         - name: auth-service
-          image: localhost:5001/smart-order/auth-service:latest
+          image: parva04/auth-service:latest
           imagePullPolicy: IfNotPresent
           ports: [{ containerPort: 8081 }]
           envFrom: [{ secretRef: { name: smart-order-secrets } }]
@@ -83,7 +83,7 @@ spec:
     spec:
       containers:
         - name: order-service
-          image: localhost:5001/smart-order/order-service:latest
+          image: parva04/order-service:latest
           imagePullPolicy: IfNotPresent
           ports: [{ containerPort: 8083 }]
           envFrom: [{ secretRef: { name: smart-order-secrets } }]
@@ -120,7 +120,7 @@ spec:
     spec:
       containers:
         - name: inventory-service
-          image: localhost:5001/smart-order/inventory-service:latest
+          image: parva04/inventory-service:latest
           imagePullPolicy: IfNotPresent
           ports: [{ containerPort: 8082 }]
           envFrom: [{ secretRef: { name: smart-order-secrets } }]
@@ -149,7 +149,7 @@ spec:
     spec:
       containers:
         - name: warehouse-service
-          image: localhost:5001/smart-order/warehouse-service:latest
+          image: parva04/warehouse-service:latest
           imagePullPolicy: IfNotPresent
           ports: [{ containerPort: 8084 }]
           envFrom: [{ secretRef: { name: smart-order-secrets } }]
@@ -178,7 +178,7 @@ spec:
     spec:
       containers:
         - name: delivery-service
-          image: localhost:5001/smart-order/delivery-service:latest
+          image: parva04/delivery-service:latest
           imagePullPolicy: IfNotPresent
           ports: [{ containerPort: 8085 }]
           envFrom: [{ secretRef: { name: smart-order-secrets } }]
@@ -207,7 +207,7 @@ spec:
     spec:
       containers:
         - name: notification-service
-          image: localhost:5001/smart-order/notification-service:latest
+          image: parva04/notification-service:latest
           imagePullPolicy: IfNotPresent
           ports: [{ containerPort: 8086 }]
           envFrom: [{ secretRef: { name: smart-order-secrets } }]
@@ -236,6 +236,6 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: localhost:5001/smart-order/frontend:latest
+          image: parva04/frontend:latest
           imagePullPolicy: IfNotPresent
           ports: [{ containerPort: 8080 }]

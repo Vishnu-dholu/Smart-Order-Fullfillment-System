@@ -68,7 +68,7 @@ GIT_COMMIT=${env.GIT_COMMIT}
                               docker build \
                                 --build-arg BUILDKIT_INLINE_CACHE=1 \
                                 --build-arg VITE_GOOGLE_CLIENT_ID="\$GOOGLE_CLIENT_ID" \
-                                --build-arg VITE_API_GATEWAY_URL="http://localhost" \
+                                --build-arg VITE_API_GATEWAY_URL="" \
                                 -t ${env.REGISTRY}/frontend:${env.IMAGE_TAG} \
                                 -f frontend/Dockerfile frontend
                             """
