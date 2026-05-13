@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: elasticsearch
+  namespace: smart-order
+spec:
+  serviceName: elasticsearch
+  replicas: 1
+  selector:
+    matchLabels: { app: elasticsearch }
+  template:
+    metadata:
+      labels: { app: elasticsearch }
+    spec:
+      containers:
+        - name: elasticsearch
+          image: docker.elastic.co/elasticsearch/elasticsearch:8.13.0
+          resources:
+            requests: { memory: "1Gi", cpu: "500m" }
+            limits:   { memory: "2Gi", cpu: "1000m" }
+          env:
+            - { name: discovery.type, value: single-node }
+            - { name: xpack.security.enabled, value: "false" }  # dev mode
+            - { name: ES_JAVA_OPTS, value: "-Xms512m -Xmx512m" }
+          ports:
+            - { containerPort: 9200 }
+          volumeMounts:
+            - { name: es-data, mountPath: /usr/share/elasticsearch/data }
+  volumeClaimTemplates:
+    - metadata: { name: es-data }
+      spec:
+        accessModes: [ReadWriteOnce]
+        resources:
+          requests: { storage: 5Gi }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: elasticsearch
+  namespace: smart-order
+spec:
+  selector: { app: elasticsearch }
+  ports:
+    - { port: 9200, targetPort: 9200 }

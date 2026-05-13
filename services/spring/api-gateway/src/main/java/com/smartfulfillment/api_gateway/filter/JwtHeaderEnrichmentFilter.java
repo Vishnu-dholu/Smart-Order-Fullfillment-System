@@ -8,8 +8,12 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
+import java.util.UUID;
 
 @Component
+@Slf4j
 public class JwtHeaderEnrichmentFilter implements GlobalFilter, Ordered {
 
     @Override
@@ -25,6 +29,12 @@ public class JwtHeaderEnrichmentFilter implements GlobalFilter, Ordered {
                     String userId = claimAsString(jwtAuthToken, "userId");
                     String userRole = claimAsString(jwtAuthToken, "role");
                     String userEmail = jwtAuthToken.getToken().getSubject();
+                    String method = exchange.getRequest().getMethod().name();
+
+                    MDC.put("trace_id", UUID.randomUUID().toString().substring(0, 8));
+                    MDC.put("user_role", userRole);
+                    MDC.put("user_id", userId);
+                    log.info("Forwarding request: {} {} as role={}", method, path, userRole);
 
                     ServerHttpRequest mutatedRequest = exchange.getRequest().mutate()
                             .headers(headers -> {

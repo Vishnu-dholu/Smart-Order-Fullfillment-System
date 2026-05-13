@@ -17,7 +17,15 @@ spec:
                 name: api-gateway
                 port:
                   number: 8080
-          # 2. Everything else goes to the React Frontend
+          # 2. Kibana
+          - path: /kibana
+            pathType: Prefix
+            backend:
+              service:
+                name: kibana
+                port:
+                  number: 5601
+          # 3. Everything else goes to the React Frontend
           - path: /
             pathType: Prefix
             backend:

@@ -9,9 +9,11 @@
 package main
 
 import (
-	"log"
 	"os"
 	"strings"
+
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 
 	_ "github.com/smartfulfillment/warehouse-service/docs"
 	swaggerFiles "github.com/swaggo/files"
@@ -26,6 +28,10 @@ import (
 )
 
 func main() {
+	// Init once at startup:
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+	log.Logger = log.With().Str("service", "warehouse-service").Logger()
+
 	// Load Configuration
 	cfg := config.LoadConfig()
 
@@ -79,9 +85,9 @@ func main() {
 	// Swagger API docs
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	// Start Server (Cleaned up the duplicate run command)
-	log.Printf("Starting Warehouse Service on port %s...", cfg.Port)
+	// Start Server
+	log.Info().Msgf("Starting Warehouse Service on port %s...", cfg.Port)
 	if err := r.Run(":" + cfg.Port); err != nil {
-		log.Fatal("Failed to start server: ", err)
+		log.Fatal().Err(err).Msg("Failed to start server")
 	}
 }

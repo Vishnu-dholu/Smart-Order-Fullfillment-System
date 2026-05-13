@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/rs/zerolog/log"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -168,17 +169,24 @@ func UpdateStock(c *gin.Context) {
 		client := &http.Client{Timeout: 5 * time.Second}
 		resp, errClient := client.Do(reqHttp)
 		if errClient != nil {
-			log.Printf("Warning: Failed to connect to Inventory Service: %v", errClient)
+			log.Error().
+				Err(errClient).
+				Str("inventory_url", inventoryURL).
+				Msg("Failed to sync global stock to inventory service")
 		} else {
 			if resp.StatusCode == http.StatusOK {
-				log.Printf("✓ Synced with Inventory Service. New Global Stock: %d", totalGlobalStock)
+				log.Info().
+					Str("trace_id", "N/A").
+					Str("warehouse_id", warehouseIDParam).
+					Int("quantity", req.Quantity).
+					Msg("Stock updated")
 			} else {
-				log.Printf("⚠ Warning: Java responded with status code: %d", resp.StatusCode)
+				log.Warn().Int("status_code", resp.StatusCode).Msg("⚠ Warning: Java responded with error status code")
 			}
 			resp.Body.Close()
 		}
 	} else {
-		log.Printf("Warning: Failed to create HTTP request: %v", errHttp)
+		log.Error().Err(errHttp).Msg("Warning: Failed to create HTTP request")
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Stock updated successfully", "current_quantity": stock.Quantity, "global_quantity": totalGlobalStock})
