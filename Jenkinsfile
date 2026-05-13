@@ -195,6 +195,7 @@ EOF
                                 sh """
                                   ansible-playbook -i ${env.ANSIBLE_INVENTORY} ansible/playbooks/rollback-k8s.yml \
                                     -e target_env=${params.DEPLOY_ENV} \
+                                    -e project_src_dir=\$PWD \
                                     --vault-password-file "\$VAULT_FILE" \
                                     --private-key "\$ANSIBLE_KEY" -u "\$ANSIBLE_USER"
                                 """
@@ -203,6 +204,7 @@ EOF
                                   ansible-playbook -i ${env.ANSIBLE_INVENTORY} ansible/playbooks/deploy-k8s.yml \
                                     -e target_env=${params.DEPLOY_ENV} \
                                     -e image_tag=${env.IMAGE_TAG} \
+                                    -e project_src_dir=\$PWD \
                                     --vault-password-file "\$VAULT_FILE" \
                                     --private-key "\$ANSIBLE_KEY" -u "\$ANSIBLE_USER"
                                 """
@@ -226,6 +228,7 @@ EOF
                     sh """
                       ansible-playbook -i ${ANSIBLE_INVENTORY} ansible/playbooks/verify-k8s.yml \
                         -e target_env=${params.DEPLOY_ENV} \
+                        -e project_src_dir=\$PWD \
                         --private-key "\$ANSIBLE_KEY" -u "\$ANSIBLE_USER"
                     """
                 }
@@ -244,6 +247,7 @@ EOF
                     sh """
                       ansible-playbook -i ${ANSIBLE_INVENTORY} ansible/playbooks/rollback-k8s.yml \
                         -e target_env=${params.DEPLOY_ENV} \
+                        -e project_src_dir=\$PWD \
                         --vault-password-file "\$VAULT_FILE" \
                         --private-key "\$ANSIBLE_KEY" -u "\$ANSIBLE_USER" || true
                     """
