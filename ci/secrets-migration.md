@@ -6,7 +6,6 @@ Create these Jenkins credentials (kind: `Secret text` unless noted):
 
 - `JWT_SECRET`
 - `INTERNAL_SERVICE_TOKEN`
-- `GOOGLE_CLIENT_ID`
 - `AUTH_DB_URL`
 - `ORDER_DB_URL`
 - `INVENTORY_DB_URL`

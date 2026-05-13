@@ -20,8 +20,8 @@ function isPublicAuthRequest(config: InternalAxiosRequestConfig): boolean {
     pathname = full; // already a path
   }
 
-  const publicPaths = ['/auth/login', '/auth/register', '/auth/google',
-                       '/api/auth/login', '/api/auth/register', '/api/auth/google'];
+  const publicPaths = ['/auth/login', '/auth/register',
+                       '/api/auth/login', '/api/auth/register'];
   return publicPaths.some((p) => pathname === p || pathname.endsWith(p));
 }
 

@@ -2,7 +2,6 @@
 # ansible-vault encrypt ansible/group_vars/dev/vault.yml
 vault_jwt_secret: "replace-dev-jwt-secret"
 vault_internal_service_token: "replace-dev-internal-token"
-vault_google_client_id: "replace-dev-google-client-id"
 
 vault_auth_db_url: "postgresql://user:pass@host/auth_db?sslmode=require"
 vault_order_db_url: "postgresql://user:pass@host/order_db?sslmode=require"

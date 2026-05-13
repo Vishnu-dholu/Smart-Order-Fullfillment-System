@@ -8,7 +8,6 @@
       --namespace={{ k8s_namespace }} \
       --from-literal=JWT_SECRET='{{ vault_jwt_secret }}' \
       --from-literal=INTERNAL_SERVICE_TOKEN='{{ vault_internal_service_token }}' \
-      --from-literal=GOOGLE_CLIENT_ID='{{ vault_google_client_id | default("") }}' \
       --from-literal=AUTH_DB_URL='{{ vault_auth_db_url }}' \
       --from-literal=ORDER_DB_URL='{{ vault_order_db_url }}' \
       --from-literal=INVENTORY_DB_URL='{{ vault_inventory_db_url }}' \

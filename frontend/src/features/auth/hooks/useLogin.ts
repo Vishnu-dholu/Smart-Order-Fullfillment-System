@@ -20,18 +20,15 @@ export const useLogin = () => {
   const navigate = useNavigate();
   const { setToken } = useAuth();
 
-  // Helper to handle the final steps (Decode -> Store -> Redirect)
   const handleSuccess = (token: string) => {
     const decoded: DecodedToken = jwtDecode(token);
     setToken(token);
 
-    // Redirect based on role
     if (decoded.role === 'ADMIN') navigate('/admin');
     else if (decoded.role === 'WAREHOUSE_MANAGER') navigate('/warehouse/inventory');
     else navigate('/app/orders');
   };
 
-  // 1. Standard Email/Password Login
   const login = async (email: string, pass: string) => {
     setIsLoading(true);
     setError(null);
@@ -49,26 +46,5 @@ export const useLogin = () => {
     }
   };
 
-  // 2. Google Login Handler
-  // Receives the ID Token from the Google Button component
-  const googleLogin = async (idToken: string) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      // Send the Google ID Token to your Spring Boot backend
-      // Endpoint: POST /auth/google
-      const response = await authApi.post<LoginResponse>('/auth/google', {
-        idToken: idToken,
-      });
-
-      handleSuccess(response.data.token);
-    } catch (err: any) {
-      console.error('Google Auth Error:', err);
-      setError('Google sign-in failed on the server.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return { login, googleLogin, isLoading, error };
+  return { login, isLoading, error };
 };

@@ -1,13 +1,11 @@
-import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
 import { AlertCircle, Eye, EyeOff, Loader2, Lock, Mail, Package } from 'lucide-react';
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useLogin } from './hooks/useLogin';
 
 export const LoginPage = () => {
-  const { login, googleLogin, isLoading, error } = useLogin();
+  const { login, isLoading, error } = useLogin();
 
-  // NEW: State for toggling password visibility
   const [showPassword, setShowPassword] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -21,16 +19,9 @@ export const LoginPage = () => {
     await login(formData.email, formData.password);
   };
 
-  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
-    if (credentialResponse.credential) {
-      await googleLogin(credentialResponse.credential);
-    }
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-xl border border-slate-100">
-        {/* Header Section */}
         <div className="text-center">
           <div className="mx-auto h-12 w-12 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg transform rotate-3">
             <Package className="h-6 w-6 text-white" />
@@ -41,7 +32,6 @@ export const LoginPage = () => {
           <p className="mt-2 text-sm text-slate-600">Sign in to manage your inventory and orders</p>
         </div>
 
-        {/* Error Alert */}
         {error && (
           <div className="rounded-md bg-red-50 p-4 border border-red-200 flex items-start gap-3">
             <AlertCircle className="h-5 w-5 text-red-500 mt-0.5" />
@@ -51,7 +41,6 @@ export const LoginPage = () => {
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
-            {/* Email Field */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-slate-700">
                 Email address
@@ -74,7 +63,6 @@ export const LoginPage = () => {
               </div>
             </div>
 
-            {/* Password Field */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-slate-700">
                 Password
@@ -83,7 +71,6 @@ export const LoginPage = () => {
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Lock className="h-5 w-5 text-slate-400" />
                 </div>
-                {/* DYNAMIC TYPE: Toggles between password and text */}
                 <input
                   id="password"
                   name="password"
@@ -95,7 +82,6 @@ export const LoginPage = () => {
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 />
-                {/* TOGGLE BUTTON */}
                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
                   <button
                     type="button"
@@ -129,7 +115,6 @@ export const LoginPage = () => {
             </div>
           </div>
 
-          {/* Submit Button */}
           <button
             type="submit"
             disabled={isLoading}
@@ -137,30 +122,8 @@ export const LoginPage = () => {
           >
             {isLoading ? <Loader2 className="animate-spin h-5 w-5" /> : 'Sign in'}
           </button>
-
-          {/* Divider */}
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-slate-200"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-slate-500">Or continue with</span>
-            </div>
-          </div>
-
-          {/* Google Button */}
-          <div className="flex flex-col items-center w-full gap-2">
-            <GoogleLogin
-              onSuccess={handleGoogleSuccess}
-              onError={() => console.log('Google Login Failed')}
-              shape="rectangular"
-              width="380"
-            />
-            {isLoading && <div className="text-xs text-slate-500">Connecting to Google...</div>}
-          </div>
         </form>
 
-        {/* Footer Link */}
         <div className="text-center text-sm">
           <span className="text-slate-600">Don't have an account? </span>
           <Link to="/register" className="font-medium text-indigo-600 hover:text-indigo-500">

@@ -63,21 +63,14 @@ GIT_COMMIT=${env.GIT_COMMIT}
             stages {
                 stage('03.1 - Build Frontend') {
                     steps {
-                        withCredentials([string(credentialsId: 'GOOGLE_CLIENT_ID', variable: 'GOOGLE_CLIENT_ID')]) {
-                            sh """
-                              set -e
-                              if [ -z "\${GOOGLE_CLIENT_ID:-}" ]; then
-                                echo 'ERROR: GOOGLE_CLIENT_ID is empty. In Jenkins: add a Secret text credential with id GOOGLE_CLIENT_ID (Google OAuth Web client ID).'
-                                exit 1
-                              fi
-                              docker build \
-                                --build-arg BUILDKIT_INLINE_CACHE=1 \
-                                --build-arg VITE_GOOGLE_CLIENT_ID="\$GOOGLE_CLIENT_ID" \
-                                --build-arg VITE_API_GATEWAY_URL="" \
-                                -t ${env.REGISTRY}/frontend:${env.IMAGE_TAG} \
-                                -f frontend/Dockerfile frontend
-                            """
-                        }
+                        sh """
+                          set -e
+                          docker build \
+                            --build-arg BUILDKIT_INLINE_CACHE=1 \
+                            --build-arg VITE_API_GATEWAY_URL="" \
+                            -t ${env.REGISTRY}/frontend:${env.IMAGE_TAG} \
+                            -f frontend/Dockerfile frontend
+                        """
                     }
                 }
                 stage('03.2 - Build Spring Services') {
@@ -171,7 +164,6 @@ GIT_COMMIT=${env.GIT_COMMIT}
                         sshUserPrivateKey(credentialsId: 'ANSIBLE_SSH_KEY', keyFileVariable: 'ANSIBLE_KEY', usernameVariable: 'ANSIBLE_USER'),
                         string(credentialsId: 'JWT_SECRET', variable: 'JWT_SECRET'),
                         string(credentialsId: 'INTERNAL_SERVICE_TOKEN', variable: 'INTERNAL_SERVICE_TOKEN'),
-                        string(credentialsId: 'GOOGLE_CLIENT_ID', variable: 'GOOGLE_CLIENT_ID'),
                         string(credentialsId: 'AUTH_DB_URL', variable: 'AUTH_DB_URL'),
                         string(credentialsId: 'ORDER_DB_URL', variable: 'ORDER_DB_URL'),
                         string(credentialsId: 'INVENTORY_DB_URL', variable: 'INVENTORY_DB_URL'),
@@ -186,7 +178,6 @@ GIT_COMMIT=${env.GIT_COMMIT}
                           cat > ansible/group_vars/${params.DEPLOY_ENV}/vault.yml <<'EOF'
 vault_jwt_secret: "${JWT_SECRET}"
 vault_internal_service_token: "${INTERNAL_SERVICE_TOKEN}"
-vault_google_client_id: "${GOOGLE_CLIENT_ID}"
 vault_auth_db_url: "${AUTH_DB_URL}"
 vault_order_db_url: "${ORDER_DB_URL}"
 vault_inventory_db_url: "${INVENTORY_DB_URL}"

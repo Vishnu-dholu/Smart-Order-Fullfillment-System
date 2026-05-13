@@ -1,7 +1,6 @@
 # Real credentials for dev environment — convert to ansible-vault encrypted in production
 vault_jwt_secret: "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970"
 vault_internal_service_token: "smartfill-internal-token"
-vault_google_client_id: ""
 
 vault_auth_db_url: "jdbc:postgresql://ep-round-frost-a10slzy6-pooler.ap-southeast-1.aws.neon.tech/auth_db?user=auth_admin&password=auth_admin(123)&sslmode=require"
 vault_order_db_url: "jdbc:postgresql://ep-round-frost-a10slzy6-pooler.ap-southeast-1.aws.neon.tech/order_db?user=order_admin&password=order_admin(123)&sslmode=require"

@@ -8,7 +8,6 @@ Use this contract from Jenkins Declarative Pipeline stages:
 - `ANSIBLE_SSH_KEY` (SSH Username with private key)
 - `JWT_SECRET`
 - `INTERNAL_SERVICE_TOKEN`
-- `GOOGLE_CLIENT_ID`
 - `AUTH_DB_URL`
 - `ORDER_DB_URL`
 - `INVENTORY_DB_URL`

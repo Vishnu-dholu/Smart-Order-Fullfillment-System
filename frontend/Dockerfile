@@ -4,17 +4,13 @@ WORKDIR /app
 
 # Declare build-time env vars so Vite can bake them into the JS bundle
 ARG VITE_API_GATEWAY_URL=http://localhost:8080
-ARG VITE_GOOGLE_CLIENT_ID
 ENV VITE_API_GATEWAY_URL=$VITE_API_GATEWAY_URL
-ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
 
 COPY package.json package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm \
     npm ci --no-audit --no-fund
 
 COPY . .
-# Fail the image build if the OAuth client ID was not passed in (avoids shipping empty Vite bundles).
-RUN test -n "$VITE_GOOGLE_CLIENT_ID" || (echo 'ERROR: build-arg VITE_GOOGLE_CLIENT_ID is required (set GOOGLE_CLIENT_ID in CI or pass --build-arg).' && exit 1)
 RUN npm run build
 
 FROM nginxinc/nginx-unprivileged:1.27.4-alpine

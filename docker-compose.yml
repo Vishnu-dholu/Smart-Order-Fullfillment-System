@@ -31,7 +31,6 @@ services:
       network: host
       args:
         - VITE_API_GATEWAY_URL=http://localhost:8080
-        - VITE_GOOGLE_CLIENT_ID=100140761576-sf690h9fall536r74p2oehesh5q42qr3.apps.googleusercontent.com
     container_name: smart-order-frontend
     ports:
       - '5173:8080'
