@@ -66,24 +66,24 @@ GIT_COMMIT=${env.GIT_COMMIT}
                         sh """
                           docker build \
                             --build-arg BUILDKIT_INLINE_CACHE=1 \
-                            -t ${REGISTRY}/frontend:${IMAGE_TAG} \
+                            -t ${env.REGISTRY}/frontend:${env.IMAGE_TAG} \
                             -f frontend/Dockerfile frontend
                         """
                     }
                 }
                 stage('03.2 - Build Spring Services') {
                     steps {
-                        sh "docker build --build-arg BUILDKIT_INLINE_CACHE=1 -t ${REGISTRY}/api-gateway:${IMAGE_TAG} -f services/spring/api-gateway/Dockerfile services/spring/api-gateway"
-                        sh "docker build --build-arg BUILDKIT_INLINE_CACHE=1 -t ${REGISTRY}/auth-service:${IMAGE_TAG} -f services/spring/auth-service/Dockerfile services/spring/auth-service"
-                        sh "docker build --build-arg BUILDKIT_INLINE_CACHE=1 -t ${REGISTRY}/inventory-service:${IMAGE_TAG} -f services/spring/inventory-service/Dockerfile services/spring/inventory-service"
-                        sh "docker build --build-arg BUILDKIT_INLINE_CACHE=1 -t ${REGISTRY}/order-service:${IMAGE_TAG} -f services/spring/order-service/Dockerfile services/spring/order-service"
+                        sh "docker build --build-arg BUILDKIT_INLINE_CACHE=1 -t ${env.REGISTRY}/api-gateway:${env.IMAGE_TAG} -f services/spring/api-gateway/Dockerfile services/spring/api-gateway"
+                        sh "docker build --build-arg BUILDKIT_INLINE_CACHE=1 -t ${env.REGISTRY}/auth-service:${env.IMAGE_TAG} -f services/spring/auth-service/Dockerfile services/spring/auth-service"
+                        sh "docker build --build-arg BUILDKIT_INLINE_CACHE=1 -t ${env.REGISTRY}/inventory-service:${env.IMAGE_TAG} -f services/spring/inventory-service/Dockerfile services/spring/inventory-service"
+                        sh "docker build --build-arg BUILDKIT_INLINE_CACHE=1 -t ${env.REGISTRY}/order-service:${env.IMAGE_TAG} -f services/spring/order-service/Dockerfile services/spring/order-service"
                     }
                 }
                 stage('03.3 - Build Go Services') {
                     steps {
-                        sh "docker build --build-arg BUILDKIT_INLINE_CACHE=1 -t ${REGISTRY}/warehouse-service:${IMAGE_TAG} -f services/go/warehouse-service/Dockerfile services/go/warehouse-service"
-                        sh "docker build --build-arg BUILDKIT_INLINE_CACHE=1 -t ${REGISTRY}/delivery-service:${IMAGE_TAG} -f services/go/delivery-service/Dockerfile services/go/delivery-service"
-                        sh "docker build --build-arg BUILDKIT_INLINE_CACHE=1 -t ${REGISTRY}/notification-service:${IMAGE_TAG} -f services/go/notification-service/Dockerfile services/go/notification-service"
+                        sh "docker build --build-arg BUILDKIT_INLINE_CACHE=1 -t ${env.REGISTRY}/warehouse-service:${env.IMAGE_TAG} -f services/go/warehouse-service/Dockerfile services/go/warehouse-service"
+                        sh "docker build --build-arg BUILDKIT_INLINE_CACHE=1 -t ${env.REGISTRY}/delivery-service:${env.IMAGE_TAG} -f services/go/delivery-service/Dockerfile services/go/delivery-service"
+                        sh "docker build --build-arg BUILDKIT_INLINE_CACHE=1 -t ${env.REGISTRY}/notification-service:${env.IMAGE_TAG} -f services/go/notification-service/Dockerfile services/go/notification-service"
                     }
                 }
             }
@@ -132,9 +132,9 @@ GIT_COMMIT=${env.GIT_COMMIT}
                     sh 'echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin'
                     script {
                         allServices.each { svc ->
-                            sh "docker push ${REGISTRY}/${svc}:${IMAGE_TAG}"
-                            sh "docker tag ${REGISTRY}/${svc}:${IMAGE_TAG} ${REGISTRY}/${svc}:latest-ci"
-                            sh "docker push ${REGISTRY}/${svc}:latest-ci"
+                            sh "docker push ${env.REGISTRY}/${svc}:${env.IMAGE_TAG}"
+                            sh "docker tag ${env.REGISTRY}/${svc}:${env.IMAGE_TAG} ${env.REGISTRY}/${svc}:latest-ci"
+                            sh "docker push ${env.REGISTRY}/${svc}:latest-ci"
                         }
                     }
                 }
@@ -148,7 +148,7 @@ GIT_COMMIT=${env.GIT_COMMIT}
             steps {
                 script {
                     allServices.each { svc ->
-                        sh "minikube image load ${REGISTRY}/${svc}:${IMAGE_TAG} || true"
+                        sh "minikube image load ${env.REGISTRY}/${svc}:${env.IMAGE_TAG} || true"
                     }
                 }
             }
@@ -193,16 +193,16 @@ EOF
                         try {
                             if (params.ROLLBACK_ONLY) {
                                 sh """
-                                  ansible-playbook -i ${ANSIBLE_INVENTORY} ansible/playbooks/rollback-k8s.yml \
+                                  ansible-playbook -i ${env.ANSIBLE_INVENTORY} ansible/playbooks/rollback-k8s.yml \
                                     -e target_env=${params.DEPLOY_ENV} \
                                     --vault-password-file "\$VAULT_FILE" \
                                     --private-key "\$ANSIBLE_KEY" -u "\$ANSIBLE_USER"
                                 """
                             } else {
                                 sh """
-                                  ansible-playbook -i ${ANSIBLE_INVENTORY} ansible/playbooks/deploy-k8s.yml \
+                                  ansible-playbook -i ${env.ANSIBLE_INVENTORY} ansible/playbooks/deploy-k8s.yml \
                                     -e target_env=${params.DEPLOY_ENV} \
-                                    -e image_tag=${IMAGE_TAG} \
+                                    -e image_tag=${env.IMAGE_TAG} \
                                     --vault-password-file "\$VAULT_FILE" \
                                     --private-key "\$ANSIBLE_KEY" -u "\$ANSIBLE_USER"
                                 """
