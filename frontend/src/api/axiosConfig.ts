@@ -1,6 +1,22 @@
 import axios, { type AxiosInstance, type InternalAxiosRequestConfig } from 'axios';
 
 /**
+ * Strip Authorization so the gateway JWT filter does not run on public routes.
+ * Axios 1.x may use AxiosHeaders where `delete headers['Authorization']` is not enough.
+ */
+function stripAuthorizationHeader(config: InternalAxiosRequestConfig): void {
+  const h = config.headers;
+  if (!h || typeof h !== 'object') return;
+  delete (h as Record<string, unknown>).Authorization;
+  delete (h as Record<string, unknown>).authorization;
+  const ax = h as { delete?: (name: string) => void };
+  if (typeof ax.delete === 'function') {
+    ax.delete('Authorization');
+    ax.delete('authorization');
+  }
+}
+
+/**
  * Returns true when the request is to a public auth endpoint that must NOT carry
  * a Bearer token — even if one exists in localStorage.  A stale / invalid token
  * sent to the gateway's oauth2ResourceServer filter will produce a 403 before
@@ -15,9 +31,13 @@ function isPublicAuthRequest(config: InternalAxiosRequestConfig): boolean {
   // Extract just the pathname so absolute URLs work too
   let pathname: string;
   try {
-    pathname = new URL(full).pathname;
+    pathname = new URL(full, 'http://localhost').pathname;
   } catch {
-    pathname = full; // already a path
+    pathname = full;
+  }
+
+  if (pathname.startsWith('/api/auth/')) {
+    return true;
   }
 
   const publicPaths = ['/auth/login', '/auth/register',
@@ -39,10 +59,7 @@ const createApiClient = (baseURL: string | undefined, defaultURL: string): Axios
       const token = localStorage.getItem('token');
 
       if (isPublicAuthRequest(config)) {
-        // Explicitly remove any Authorization header for public auth endpoints.
-        // A stale or wrong-environment Bearer token triggers the gateway's
-        // oauth2ResourceServer JWT filter BEFORE permitAll() applies → 403.
-        delete config.headers['Authorization'];
+        stripAuthorizationHeader(config);
       } else if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
