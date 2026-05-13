@@ -156,10 +156,14 @@ spec:
           ports: [{ containerPort: 8084 }]
           envFrom: [{ secretRef: { name: smart-order-secrets } }]
           env:
-            - name: DB_URL # 🛡️ FIX 3: Corrected from DATABASE_URL to DB_URL
+            - name: DB_URL
               valueFrom: { secretKeyRef: { name: smart-order-secrets, key: WAREHOUSE_DB_URL } }
             - name: CORS_ALLOWED_ORIGINS
               value: 'http://localhost,http://localhost:5173,http://localhost:8080,http://localhost:8888'
+            - name: INVENTORY_SERVICE_URL
+              value: 'http://inventory-service:8082'
+            - name: INTERNAL_SERVICE_TOKEN
+              valueFrom: { secretKeyRef: { name: smart-order-secrets, key: INTERNAL_SERVICE_TOKEN } }
 ---
 # ==========================================
 # 🐹 DELIVERY SERVICE
