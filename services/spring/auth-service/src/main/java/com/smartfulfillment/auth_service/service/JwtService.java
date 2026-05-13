@@ -3,12 +3,14 @@ package com.smartfulfillment.auth_service.service;
 import com.smartfulfillment.auth_service.config.JwtProperties;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
+import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,7 +39,22 @@ public class JwtService {
     }
 
     private Key getSigningKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(jwtProperties.getSecret());
+        byte[] keyBytes = decodeSecret(jwtProperties.getSecret());
         return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    /**
+     * Must match {@code api-gateway} {@code SecurityConfig#decodeSecret}: try Base64, else UTF-8 bytes.
+     * Otherwise tokens verify on one side and fail on the other when {@code jwt.secret} is not valid Base64.
+     */
+    private byte[] decodeSecret(String secret) {
+        if (!StringUtils.hasText(secret)) {
+            throw new IllegalStateException("jwt.secret must be configured");
+        }
+        try {
+            return Base64.getDecoder().decode(secret);
+        } catch (IllegalArgumentException ignored) {
+            return secret.getBytes(StandardCharsets.UTF_8);
+        }
     }
 }

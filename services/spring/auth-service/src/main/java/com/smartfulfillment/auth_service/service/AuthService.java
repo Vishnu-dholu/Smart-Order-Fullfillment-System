@@ -25,7 +25,8 @@ public class AuthService {
             throw new RuntimeException("Email already registered");
         }
 
-        String roleStr = (request.getRole() == null) ? Role.CUSTOMER.name() : request.getRole();
+        // Self-service registration must not trust client-supplied role (would allow ADMIN/WAREHOUSE_MANAGER escalation).
+        String roleStr = Role.CUSTOMER.name();
 
         User user = User.builder()
                 .username(request.getUsername())

@@ -64,7 +64,9 @@ export const WarehouseDashboard = () => {
   // Dual-cache flags
   const [hasFetchedInventory, setHasFetchedInventory] = useState(false);
   const [hasFetchedOrders, setHasFetchedOrders] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  /** Separate flags so inventory vs orders requests do not clobber each other's UI (avoids stuck spinners). */
+  const [inventoryLoading, setInventoryLoading] = useState(false);
+  const [ordersLoading, setOrdersLoading] = useState(false);
 
   // --- Modal & Form State ---
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -98,7 +100,7 @@ export const WarehouseDashboard = () => {
 
   // --- Data Fetching ---
   const fetchInventoryData = async () => {
-    setIsLoading(true);
+    setInventoryLoading(true);
     try {
       const stockRes = await warehouseApi.get('/stock');
       setInventory(stockRes.data || []);
@@ -115,21 +117,25 @@ export const WarehouseDashboard = () => {
       setHasFetchedInventory(true);
     } catch (error) {
       console.error('Error fetching inventory data:', error);
+      setErrorMsg('Could not load inventory. You may need Warehouse Manager or Admin access.');
+      setHasFetchedInventory(true);
     } finally {
-      setIsLoading(false);
+      setInventoryLoading(false);
     }
   };
 
   const fetchOrdersData = async () => {
-    setIsLoading(true);
+    setOrdersLoading(true);
     try {
       const ordersRes = await orderApi.get('/orders/all');
       setAllSystemOrders(ordersRes.data || []);
       setHasFetchedOrders(true);
     } catch (error) {
       console.error('Error fetching orders data:', error);
+      setErrorMsg('Could not load orders queue. Warehouse Manager or Admin role is required.');
+      setHasFetchedOrders(true);
     } finally {
-      setIsLoading(false);
+      setOrdersLoading(false);
     }
   };
 
@@ -160,7 +166,12 @@ export const WarehouseDashboard = () => {
 
       setHasFetchedInventory(false);
     } catch (err: any) {
-      setErrorMsg(err.response?.data?.error || 'Failed to receive stock.');
+      const status = err.response?.status;
+      if (status === 403) {
+        setErrorMsg('Not allowed: receiving stock requires a Warehouse Manager or Admin account.');
+      } else {
+        setErrorMsg(err.response?.data?.error || 'Failed to receive stock.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -173,7 +184,11 @@ export const WarehouseDashboard = () => {
       setHasFetchedOrders(false);
       setHasFetchedInventory(false);
     } catch (err: any) {
-      setErrorMsg('Failed to update order status.');
+      if (err.response?.status === 403) {
+        setErrorMsg('Not allowed: shipping orders requires Warehouse Manager or Admin.');
+      } else {
+        setErrorMsg('Failed to update order status.');
+      }
       console.error(err);
     }
   };
@@ -331,7 +346,7 @@ export const WarehouseDashboard = () => {
               <h2 className="text-lg font-bold text-slate-900">Live Inventory Distribution</h2>
             </div>
             <div className="overflow-x-auto">
-              {isLoading && inventory.length === 0 ? (
+              {inventoryLoading && inventory.length === 0 ? (
                 <div className="p-12 flex justify-center items-center text-slate-500 gap-3">
                   <Loader2 className="h-6 w-6 animate-spin" /> Syncing with physical warehouses...
                 </div>
@@ -439,7 +454,7 @@ export const WarehouseDashboard = () => {
           </div>
 
           <div className="overflow-x-auto">
-            {isLoading && allSystemOrders.length === 0 ? (
+            {ordersLoading && allSystemOrders.length === 0 ? (
               <div className="p-12 flex justify-center items-center text-slate-500 gap-3">
                 <Loader2 className="h-6 w-6 animate-spin" /> Fetching active orders...
               </div>
@@ -513,7 +528,7 @@ export const WarehouseDashboard = () => {
           </div>
 
           <div className="overflow-x-auto">
-            {isLoading && allSystemOrders.length === 0 ? (
+            {ordersLoading && allSystemOrders.length === 0 ? (
               <div className="p-12 flex justify-center items-center text-slate-500 gap-3">
                 <Loader2 className="h-6 w-6 animate-spin" /> Fetching shipment history...
               </div>
