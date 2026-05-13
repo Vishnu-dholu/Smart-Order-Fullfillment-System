@@ -1,7 +1,7 @@
 ---
 - name: Verify Kubernetes deployment health
   hosts: k8s_nodes
-  become: true
+  become: false
   gather_facts: false
   vars:
     target_env: "{{ target_env | default('dev') }}"

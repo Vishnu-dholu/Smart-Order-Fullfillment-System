@@ -1,7 +1,7 @@
 ---
 - name: Roll back Kubernetes deployments to previous revision
   hosts: k8s_nodes
-  become: true
+  become: false
   gather_facts: false
   vars:
     target_env: "{{ target_env | default('dev') }}"

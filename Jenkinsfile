@@ -258,6 +258,8 @@ EOF
         always {
             sh 'kubectl get pods -n smart-order 2>/dev/null || true'
             sh 'kubectl get deployments -n smart-order 2>/dev/null || true'
+        }
+        cleanup {
             cleanWs(deleteDirs: true, notFailBuild: true)
         }
         success {
