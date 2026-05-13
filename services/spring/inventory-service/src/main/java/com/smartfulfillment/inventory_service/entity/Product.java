@@ -41,6 +41,15 @@ public class Product {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
+    @Builder.Default
     @Column(name = "low_stock_threshold", nullable = false)
     private Integer lowStockThreshold = 10; // Default value
+
+    /** Safety net: ensure non-null fields have defaults before any INSERT. */
+    @PrePersist
+    private void prePersist() {
+        if (lowStockThreshold == null) {
+            lowStockThreshold = 10;
+        }
+    }
 }

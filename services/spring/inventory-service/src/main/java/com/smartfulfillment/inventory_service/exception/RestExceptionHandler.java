@@ -31,7 +31,8 @@ public class RestExceptionHandler {
         if (lower.contains("not null") || lower.contains("null value")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("message",
-                            "Missing required field (e.g. price). Enter a valid numeric price and try again."));
+                            "A required field is missing or null. Check that all fields (price, sku, name) are provided.",
+                            "details", root != null ? root : "null constraint violation"));
         }
 
         Map<String, String> body = new LinkedHashMap<>();

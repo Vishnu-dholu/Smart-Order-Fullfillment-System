@@ -98,6 +98,7 @@ export const AdminDashboard = () => {
       const price = parseFloat(productForm.price);
       if (!Number.isFinite(price)) {
         setErrorMsg('Enter a valid numeric price.');
+        setIsSubmitting(false);
         return;
       }
 
