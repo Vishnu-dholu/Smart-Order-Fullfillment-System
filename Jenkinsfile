@@ -24,7 +24,6 @@ pipeline {
 
     environment {
         REGISTRY = 'parva04'
-        IMAGE_TAG = 'unset'
         ANSIBLE_CONFIG = 'ansible/ansible.cfg'
         ANSIBLE_INVENTORY = "ansible/inventories/${params.DEPLOY_ENV}/hosts.yml"
     }
@@ -200,6 +199,9 @@ EOF
                                     --private-key "\$ANSIBLE_KEY" -u "\$ANSIBLE_USER"
                                 """
                             } else {
+                                if (!env.IMAGE_TAG?.trim()) {
+                                    error('IMAGE_TAG is not set. Ensure stage "02 - Prepare Build Metadata" ran (ROLLBACK_ONLY must be false for full deploy).')
+                                }
                                 sh """
                                   ansible-playbook -i ${env.ANSIBLE_INVENTORY} ansible/playbooks/deploy-k8s.yml \
                                     -e target_env=${params.DEPLOY_ENV} \
@@ -227,7 +229,7 @@ EOF
                     sshUserPrivateKey(credentialsId: 'ANSIBLE_SSH_KEY', keyFileVariable: 'ANSIBLE_KEY', usernameVariable: 'ANSIBLE_USER')
                 ]) {
                     sh """
-                      ansible-playbook -i ${ANSIBLE_INVENTORY} ansible/playbooks/verify-k8s.yml \
+                      ansible-playbook -i ${env.ANSIBLE_INVENTORY} ansible/playbooks/verify-k8s.yml \
                         -e target_env=${params.DEPLOY_ENV} \
                         -e project_src_dir=\$PWD \
                         --private-key "\$ANSIBLE_KEY" -u "\$ANSIBLE_USER"
@@ -246,7 +248,7 @@ EOF
                     sshUserPrivateKey(credentialsId: 'ANSIBLE_SSH_KEY', keyFileVariable: 'ANSIBLE_KEY', usernameVariable: 'ANSIBLE_USER')
                 ]) {
                     sh """
-                      ansible-playbook -i ${ANSIBLE_INVENTORY} ansible/playbooks/rollback-k8s.yml \
+                      ansible-playbook -i ${env.ANSIBLE_INVENTORY} ansible/playbooks/rollback-k8s.yml \
                         -e target_env=${params.DEPLOY_ENV} \
                         -e project_src_dir=\$PWD \
                         --vault-password-file "\$VAULT_FILE" \
@@ -263,7 +265,7 @@ EOF
             cleanWs(deleteDirs: true, notFailBuild: true)
         }
         success {
-            echo "Kubernetes deployment succeeded for ${params.DEPLOY_ENV} with image tag ${IMAGE_TAG}"
+            echo "Kubernetes deployment succeeded for ${params.DEPLOY_ENV} with image tag ${env.IMAGE_TAG ?: 'n/a'}"
         }
     }
 }

@@ -6,6 +6,16 @@
   vars:
     target_env: "{{ target_env | default('dev') }}"
     image_tag: "{{ image_tag | default('latest-ci') }}"
+  pre_tasks:
+    - name: Refuse invalid container image tag
+      ansible.builtin.assert:
+        that:
+          - image_tag is string
+          - image_tag | length > 0
+          - image_tag not in ['unset', 'null', 'undefined']
+        fail_msg: >-
+          image_tag must be a real registry tag (e.g. Jenkins BUILD_NUMBER-gitsha, or latest-ci).
+          Got '{{ image_tag }}'. Pass -e image_tag=... or fix CI so stage 02 sets IMAGE_TAG before deploy.
   vars_files:
     - "../group_vars/all/main.yml"
     - "../group_vars/{{ target_env }}/main.yml"
