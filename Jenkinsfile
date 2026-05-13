@@ -205,6 +205,7 @@ EOF
                                     -e target_env=${params.DEPLOY_ENV} \
                                     -e image_tag=${env.IMAGE_TAG} \
                                     -e project_src_dir=\$PWD \
+                                    -e k8s_registry=${env.REGISTRY} \
                                     --vault-password-file "\$VAULT_FILE" \
                                     --private-key "\$ANSIBLE_KEY" -u "\$ANSIBLE_USER"
                                 """
