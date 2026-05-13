@@ -90,6 +90,14 @@ spec:
           env:
             - name: SPRING_DATASOURCE_URL
               valueFrom: { secretKeyRef: { name: smart-order-secrets, key: ORDER_DB_URL } }
+            - name: INVENTORY_SERVICE_URL
+              value: 'http://inventory-service:8082'
+            - name: WAREHOUSE_SERVICE_URL
+              value: 'http://warehouse-service:8084'
+            - name: DELIVERY_SERVICE_URL
+              value: 'http://delivery-service:8085'
+            - name: NOTIFICATION_SERVICE_URL
+              value: 'http://notification-service:8086'
 ---
 # ==========================================
 # ☕ INVENTORY SERVICE
