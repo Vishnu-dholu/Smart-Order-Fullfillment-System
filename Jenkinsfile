@@ -24,7 +24,7 @@ pipeline {
 
     environment {
         REGISTRY = 'parva04'
-        IMAGE_TAG = 'latest'
+        IMAGE_TAG = 'unset'
         ANSIBLE_CONFIG = 'ansible/ansible.cfg'
         ANSIBLE_INVENTORY = "ansible/inventories/${params.DEPLOY_ENV}/hosts.yml"
     }
