@@ -13,6 +13,8 @@ RUN --mount=type=cache,target=/root/.npm \
     npm ci --no-audit --no-fund
 
 COPY . .
+# Fail the image build if the OAuth client ID was not passed in (avoids shipping empty Vite bundles).
+RUN test -n "$VITE_GOOGLE_CLIENT_ID" || (echo 'ERROR: build-arg VITE_GOOGLE_CLIENT_ID is required (set GOOGLE_CLIENT_ID in CI or pass --build-arg).' && exit 1)
 RUN npm run build
 
 FROM nginxinc/nginx-unprivileged:1.27.4-alpine

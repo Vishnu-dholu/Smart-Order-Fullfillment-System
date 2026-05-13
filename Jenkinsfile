@@ -65,6 +65,11 @@ GIT_COMMIT=${env.GIT_COMMIT}
                     steps {
                         withCredentials([string(credentialsId: 'GOOGLE_CLIENT_ID', variable: 'GOOGLE_CLIENT_ID')]) {
                             sh """
+                              set -e
+                              if [ -z "\${GOOGLE_CLIENT_ID:-}" ]; then
+                                echo 'ERROR: GOOGLE_CLIENT_ID is empty. In Jenkins: add a Secret text credential with id GOOGLE_CLIENT_ID (Google OAuth Web client ID).'
+                                exit 1
+                              fi
                               docker build \
                                 --build-arg BUILDKIT_INLINE_CACHE=1 \
                                 --build-arg VITE_GOOGLE_CLIENT_ID="\$GOOGLE_CLIENT_ID" \
