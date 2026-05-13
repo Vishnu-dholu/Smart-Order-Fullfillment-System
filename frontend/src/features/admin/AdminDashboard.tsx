@@ -95,11 +95,17 @@ export const AdminDashboard = () => {
     setSuccessMsg(null);
 
     try {
+      const price = parseFloat(productForm.price);
+      if (!Number.isFinite(price)) {
+        setErrorMsg('Enter a valid numeric price.');
+        return;
+      }
+
       const payload = {
         sku: productForm.sku,
         name: productForm.name,
         description: productForm.description,
-        price: parseFloat(productForm.price),
+        price,
         imageUrl: productForm.imageUrl,
       };
 
@@ -120,8 +126,10 @@ export const AdminDashboard = () => {
       // Auto-switch to the catalog tab
       setActiveTab('catalog');
     } catch (err: any) {
+      const d = err.response?.data;
+      const parts = [d?.message, d?.details].filter(Boolean);
       setErrorMsg(
-        err.response?.data?.message || 'Failed to create product. Check if SKU is unique.',
+        parts.length > 0 ? parts.join(' ') : 'Failed to create product. Check if SKU is unique.',
       );
     } finally {
       setIsSubmitting(false);
