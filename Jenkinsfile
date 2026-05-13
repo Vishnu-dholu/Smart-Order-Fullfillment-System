@@ -63,12 +63,15 @@ GIT_COMMIT=${env.GIT_COMMIT}
             stages {
                 stage('03.1 - Build Frontend') {
                     steps {
-                        sh """
-                          docker build \
-                            --build-arg BUILDKIT_INLINE_CACHE=1 \
-                            -t ${env.REGISTRY}/frontend:${env.IMAGE_TAG} \
-                            -f frontend/Dockerfile frontend
-                        """
+                        withCredentials([string(credentialsId: 'GOOGLE_CLIENT_ID', variable: 'GOOGLE_CLIENT_ID')]) {
+                            sh """
+                              docker build \
+                                --build-arg BUILDKIT_INLINE_CACHE=1 \
+                                --build-arg VITE_GOOGLE_CLIENT_ID="\$GOOGLE_CLIENT_ID" \
+                                -t ${env.REGISTRY}/frontend:${env.IMAGE_TAG} \
+                                -f frontend/Dockerfile frontend
+                            """
+                        }
                     }
                 }
                 stage('03.2 - Build Spring Services') {
