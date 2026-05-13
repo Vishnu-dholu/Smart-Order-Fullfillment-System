@@ -158,6 +158,8 @@ spec:
           env:
             - name: DB_URL # 🛡️ FIX 3: Corrected from DATABASE_URL to DB_URL
               valueFrom: { secretKeyRef: { name: smart-order-secrets, key: WAREHOUSE_DB_URL } }
+            - name: CORS_ALLOWED_ORIGINS
+              value: 'http://localhost,http://localhost:5173,http://localhost:8080,http://localhost:8888'
 ---
 # ==========================================
 # 🐹 DELIVERY SERVICE

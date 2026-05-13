@@ -11,6 +11,7 @@ package main
 import (
 	"log"
 	"os"
+	"strings"
 
 	_ "github.com/smartfulfillment/warehouse-service/docs"
 	swaggerFiles "github.com/swaggo/files"
@@ -22,7 +23,6 @@ import (
 	"github.com/smartfulfillment/warehouse-service/internal/config"
 	"github.com/smartfulfillment/warehouse-service/internal/database"
 	"github.com/smartfulfillment/warehouse-service/internal/handlers"
-	// "github.com/smartfulfillment/warehouse-service/internal/models"
 )
 
 func main() {
@@ -45,7 +45,14 @@ func main() {
 	if corsOrigin == "" {
 		corsOrigin = "http://localhost:5173"
 	}
-	corsConfig.AllowOrigins = []string{corsOrigin}
+	// Support comma-separated list of allowed origins
+	var allowedOrigins []string
+	for _, o := range strings.Split(corsOrigin, ",") {
+		if trimmed := strings.TrimSpace(o); trimmed != "" {
+			allowedOrigins = append(allowedOrigins, trimmed)
+		}
+	}
+	corsConfig.AllowOrigins = allowedOrigins
 	corsConfig.AllowMethods = []string{"GET", "POST", "OPTIONS", "PUT", "PATCH", "DELETE"}
 	corsConfig.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization", "X-User-Id", "X-User-Role"}
 	corsConfig.AllowCredentials = true

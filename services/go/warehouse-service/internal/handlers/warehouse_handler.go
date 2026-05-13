@@ -42,13 +42,17 @@ func hasWarehouseWriteAccess(c *gin.Context) bool {
 // @Success      201  {object}  models.Warehouse
 // @Router       /warehouses [post]
 func CreateWarehouse(c *gin.Context) {
+	if !hasWarehouseWriteAccess(c) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden: ADMIN or WAREHOUSE_MANAGER role required"})
+		return
+	}
+
 	var warehouse models.Warehouse
 	if err := c.ShouldBindJSON(&warehouse); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Create in DB
 	result := database.DB.Create(&warehouse)
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
