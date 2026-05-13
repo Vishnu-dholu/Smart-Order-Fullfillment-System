@@ -51,6 +51,7 @@ const createApiClient = (baseURL: string | undefined, defaultURL: string): Axios
     baseURL: baseURL || defaultURL,
     headers: { 'Content-Type': 'application/json' },
     withCredentials: true,
+    timeout: 10000, // 10 s — prevents UI freeze when a service is slow/down
   });
 
   // Intercept every request BEFORE it leaves the browser
