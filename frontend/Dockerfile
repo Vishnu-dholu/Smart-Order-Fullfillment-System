@@ -3,7 +3,9 @@ FROM node:20.19.1-alpine3.21 AS build
 WORKDIR /app
 
 # Declare build-time env vars so Vite can bake them into the JS bundle
-ARG VITE_API_GATEWAY_URL=http://localhost:8080
+# Default to empty string so Vite uses relative paths (/api/...) which work
+# correctly behind the K8s Ingress. Override only for local docker-compose runs.
+ARG VITE_API_GATEWAY_URL=
 ENV VITE_API_GATEWAY_URL=$VITE_API_GATEWAY_URL
 
 COPY package.json package-lock.json ./

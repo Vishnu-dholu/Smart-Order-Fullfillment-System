@@ -46,7 +46,10 @@ public class SecurityConfig {
                         .pathMatchers(HttpMethod.POST, "/api/products/**").hasRole("ADMIN")
                         .pathMatchers(HttpMethod.GET, "/api/orders/all").hasAnyRole("ADMIN", "WAREHOUSE_MANAGER")
                         .pathMatchers(HttpMethod.PUT, "/api/orders/*/status").hasAnyRole("ADMIN", "WAREHOUSE_MANAGER")
-                        .pathMatchers(HttpMethod.GET, "/api/warehouse/stock/**").hasAnyRole("ADMIN", "WAREHOUSE_MANAGER")
+                        // FIX: Match both exact /api/warehouse/stock AND sub-paths /api/warehouse/stock/**
+                        .pathMatchers(HttpMethod.GET, "/api/warehouse/stock", "/api/warehouse/stock/**").hasAnyRole("ADMIN", "WAREHOUSE_MANAGER")
+                        // FIX: Match GET on warehouses list (used by warehouse dashboard)
+                        .pathMatchers(HttpMethod.GET, "/api/warehouse/warehouses", "/api/warehouse/warehouses/**").hasAnyRole("ADMIN", "WAREHOUSE_MANAGER")
                         .pathMatchers(HttpMethod.POST, "/api/warehouse/**").hasAnyRole("ADMIN", "WAREHOUSE_MANAGER")
                         .pathMatchers("/api/delivery/**").authenticated()
                         .pathMatchers("/api/notification/**").authenticated()
