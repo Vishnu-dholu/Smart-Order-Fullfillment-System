@@ -1,14 +1,11 @@
-\documentclass[12pt,a4paper]{report}
-
-% =========================
-% Packages
-% =========================
-\usepackage[a4paper,margin=1in]{geometry}
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{hyperref}
+\usepackage[margin=1in]{geometry}
 \usepackage{graphicx}
 \usepackage{float}
 \usepackage{amsmath}
 \usepackage{amssymb}
-\usepackage{hyperref}
 \usepackage{booktabs}
 \usepackage{longtable}
 \usepackage{array}
@@ -16,184 +13,284 @@
 \usepackage{titlesec}
 \usepackage{fancyhdr}
 \usepackage{xcolor}
-\usepackage{listings}
 
-% =========================
-% Header/Footer
-% =========================
+\title{Smart Order Fulfillment System: \\ A Polyglot Microservices-Based Architecture}
+\author{
+    Vishnu Dholu \and 
+    Project Contributor
+}
+\date{\today}
+
+% Header and Footer
 \pagestyle{fancy}
 \fancyhf{}
 \fancyhead[L]{Smart Order Fulfillment System}
-\fancyhead[R]{Detailed Architecture Report}
+\fancyhead[R]{Detailed Report}
 \fancyfoot[C]{\thepage}
-
-% =========================
-% Title
-% =========================
-\title{
-    \Huge \textbf{Comprehensive System Architecture and Implementation Report} \\
-    \vspace{1cm}
-    \Large Smart Order Fulfillment System: A Polyglot Cloud-Native Microservices Platform
-}
-
-\author{
-    [Contributor 1 Name] -- [ID 1] \\
-    [Contributor 2 Name] -- [ID 2]
-}
-
-\date{\today}
 
 \begin{document}
 
 \maketitle
 
-\section*{Project Repository}
-\textbf{GitHub:} \url{https://github.com/Vishnu-dholu/Smart-Order-Fullfillment-System}
-
 \tableofcontents
 \newpage
 
-\chapter{Application Architecture Overview}
-The Smart Order Fulfillment System is a modern, cloud-native application engineered to manage the complex lifecycle of e-commerce orders, including inventory deduction, optimal warehouse routing, and delivery dispatch. The system completely decouples its domains into independently deployable microservices. 
-
-A polyglot architectural approach is employed to optimize both development speed and runtime efficiency. The core, transactional business domains utilize Java and the Spring Boot framework, ensuring robust data integrity. Conversely, high-throughput, computationally intensive, and asynchronous background services are written in Go (Golang) to minimize memory footprints and maximize concurrent processing capabilities.
-
-All services are containerized via Docker and orchestrated within a Kubernetes cluster. External traffic is managed by an Nginx Ingress Controller, which performs path-based routing to internal services. To enforce data decentralization, each microservice operates its own isolated PostgreSQL database.
-
-\begin{figure}[H]
-    \centering
-    \vspace{8cm} % Space for architecture diagram
-    \caption{High-Level Polyglot Application Architecture}
-\end{figure}
-
-\chapter{Source Code Analysis: Services and Frontend}
-
-\section{Frontend Implementation}
-The user interface is a Single Page Application (SPA) built with React.js and compiled using the Vite build tool for rapid Hot Module Replacement (HMR) during development and highly optimized static bundles for production. 
-
-The source code resides within the \texttt{frontend/} directory. HTTP communication is handled via Axios. A core design principle in the frontend is stateless authentication; JSON Web Tokens (JWT) are securely managed and automatically attached to the authorization header of every outgoing request using Axios interceptors. The frontend is packaged using a multi-stage \texttt{Dockerfile}, which first builds the React app and then serves the static files using a minimal Nginx image configured via a custom \texttt{nginx.conf}.
-
-\begin{figure}[H]
-    \centering
-    \vspace{6cm} % Space for frontend UI screenshot
-    \caption{Frontend User Dashboard and Order Tracking Interface}
-\end{figure}
-
-\section{Spring Boot Core Microservices}
-The core domain services rely on Java 17+ and the Spring Boot 3.x ecosystem. These reside within the \texttt{services/spring/} directory:
-
+\section{System Overview}
+\subsection{User Roles}
+The Smart Order Fulfillment System handles multiple user roles to ensure robust access control and specialized dashboards:
 \begin{itemize}
-    \item \textbf{API Gateway:} Utilizing Spring Cloud Gateway, this service acts as the perimeter defense and single entry point. It handles Cross-Origin Resource Sharing (CORS), dynamically routes traffic to internal microservices, and validates JWT signatures globally before allowing traffic into the internal network.
-    \item \textbf{Auth Service:} Responsible for user identity management, this service handles local registration, login, and Google OAuth 2.0 federation. It issues the signed JWTs that contain role-based claims (e.g., \texttt{ROLE\_USER}, \texttt{ROLE\_ADMIN}).
-    \item \textbf{Order Service:} Manages the transactional creation of orders, orchestrating state transitions from pending to dispatched, and maintaining the historical record of user purchases.
-    \item \textbf{Inventory Service:} Critically ensures that inventory counts are accurately deducted during the checkout process. It utilizes database-level locking and HikariCP connection pooling to prevent race conditions during concurrent high-volume transactions.
+    \item \textbf{Customer:} Can browse products, place orders, view order history, and receive delivery notifications.
+    \item \textbf{Admin/System Operator:} Can monitor system health, oversee inventory levels, view aggregate order data, and manage delivery personnel assignment.
 \end{itemize}
 
-\section{Go (Golang) Microservices}
-Services requiring lower latency and asynchronous capabilities are implemented in Go using the Fiber framework, known for its extreme performance and Express-like API. These reside within the \texttt{services/go/} directory:
-
+\subsection{Core Functionalities}
+The system automates the entire lifecycle of an e-commerce order:
 \begin{itemize}
-    \item \textbf{Warehouse Service:} A computationally heavy service responsible for calculating the nearest and most optimal warehouse to fulfill an incoming order based on geographic routing logic.
-    \item \textbf{Delivery Service:} Manages the logistical assignment of delivery personnel and tracks shipment statuses.
-    \item \textbf{Notification Service:} An asynchronous worker that listens for system events (such as order confirmation) and dispatches emails via SMTP to the end users.
+    \item \textbf{Order Placement:} Securely processing incoming purchase requests.
+    \item \textbf{Inventory Management:} Real-time deduction of stock levels to prevent overselling.
+    \item \textbf{Warehouse Routing:} Geographically calculating the optimal warehouse to fulfill an order based on customer location.
+    \item \textbf{Delivery Dispatch:} Assigning personnel and tracking shipment status.
+    \item \textbf{User Authentication:} Secure login and Google OAuth integration using JWTs.
 \end{itemize}
 
-\subsection*{Twin Service Benchmarking}
-A notable engineering feat within this project is the implementation of "Twin" services. For example, an identical warehouse routing service was written in both Spring Boot (\texttt{warehouse-twin}) and Go (\texttt{warehouse-service}). This deliberate duplication allowed the team to conduct empirical, side-by-side performance benchmarking to analyze request latency, CPU throttling, and Garbage Collection pauses between the Java Virtual Machine (JVM) and the Go runtime under simulated high load.
+\subsection{Microservices-Based Design}
+The system is built on a highly decoupled, polyglot microservices architecture. It strictly adheres to the principle of "one database per service" to ensure data sovereignty. The core transactional domains are written in Java (Spring Boot) for reliability, while computationally heavy or asynchronous tasks are offloaded to Go (Fiber) services for maximum throughput and minimal memory footprint.
 
-\chapter{The Role of Jenkins in CI/CD}
-Continuous Integration and Continuous Deployment (CI/CD) are fundamental to the project's velocity. Jenkins acts as the central automation server, bridging the gap between source code version control and infrastructure deployment.
-
-The pipeline is defined entirely as code within a declarative \texttt{Jenkinsfile}. Upon detecting a push to the GitHub repository, Jenkins provisions a workspace, extracts the latest code, and orchestrates the entire delivery lifecycle. Its primary responsibilities include:
+\subsection{High-Level Request Flow}
 \begin{enumerate}
-    \item \textbf{Quality Assurance:} Automatically executing unit and integration tests for React (\texttt{npm run test}), Spring Boot (\texttt{mvn test}), and Go (\texttt{go test}) to prevent regressions.
-    \item \textbf{Artifact Generation:} Driving the Docker daemon to build optimized, multi-stage Docker images for every service.
-    \item \textbf{Artifact Storage:} Pushing the newly built, strictly versioned Docker images to a central registry (DockerHub).
-    \item \textbf{Deployment Orchestration:} Securely passing the baton to Ansible to apply these new images to the Kubernetes cluster.
+    \item A client application sends an HTTP request.
+    \item The request hits the Nginx Ingress Controller deployed on the Kubernetes cluster.
+    \item The Ingress Controller routes the request to either the React Frontend or the API Gateway.
+    \item The API Gateway validates the JWT, handles CORS, and proxies the request to the appropriate internal microservice.
+    \item The microservice processes the request, interacting with its dedicated PostgreSQL database, and potentially communicating synchronously or asynchronously with other services before returning the response.
 \end{enumerate}
 
-\chapter{Detailed Overview of the Jenkins CI/CD Pipeline Stages}
-The Jenkins pipeline is segmented into granular, sequential stages to ensure traceability and fail-fast behavior.
+\section{Overall System Architecture}
 
-\section{Stage 1 \& 2: Checkout and Build Metadata}
-Jenkins retrieves the source code and generates an immutable \texttt{IMAGE\_TAG} composed of the Jenkins \texttt{BUILD\_NUMBER} and the short Git commit hash (e.g., \texttt{42-a1b2c3d}). This guarantees that every deployment can be traced directly back to a specific code change.
+\subsection{Architectural Style}
+The project employs a polyglot microservices architectural pattern. This allows independent scaling, deployment, and technology selection for distinct business domains.
 
-\section{Stage 3: Build Images (Sequential)}
-To prevent Out-Of-Memory (OOM) errors on the Jenkins worker node, image builds are executed sequentially:
+\subsection{Frontend Architecture}
+The frontend is a Single Page Application (SPA) designed using React and Vite. It utilizes Tailwind CSS for utility-first styling and React Router DOM for client-side navigation. The UI communicates strictly with the API Gateway.
+
+\subsection{Backend Microservices Architecture}
+The backend is logically divided into two language ecosystems:
 \begin{itemize}
-    \item \textbf{Frontend Build:} Injects environment variables dynamically and builds the React application using BuildKit caching.
-    \item \textbf{Spring Services Build:} Containerizes the API Gateway, Auth, Order, and Inventory services using Maven.
-    \item \textbf{Go Services Build:} Compiles the statically linked Go binaries for the Warehouse, Delivery, and Notification services.
+    \item \textbf{Spring Boot Ecosystem (Java):} API Gateway, Auth Service, Inventory Service, Order Service.
+    \item \textbf{Go Ecosystem (Fiber):} Warehouse Service, Delivery Service, Notification Service.
 \end{itemize}
 
-\section{Stage 4: Automated Testing}
-Executes the test suites for all microservices. If a single test fails, the pipeline aborts immediately, ensuring broken code never reaches the registry or the deployment environment.
+\subsection{Database Architecture}
+A decentralized data management pattern is implemented. Every microservice has its own isolated PostgreSQL database schema. This prevents tight coupling at the data layer and avoids a single point of failure.
 
-\section{Stage 5 \& 6: Push to Registry and Minikube Load}
-The pipeline logs into DockerHub using securely injected credentials, pushes the tagged images, and additionally loads them directly into the local Minikube environment's Docker daemon. This bypasses the need for the cluster to pull images from the internet, significantly speeding up local deployments.
+\subsection{Inter-Service Communication}
+Internal services communicate primarily via RESTful HTTP calls over the internal Kubernetes network (\texttt{ClusterIP}). Authentication for inter-service communication is handled via internal service tokens to bypass standard user JWT validation.
 
-\section{Stage 7: Deploy to Kubernetes via Ansible}
-Jenkins acts as a secure proxy, retrieving sensitive credentials (database passwords, JWT secrets) from its vault. It injects these into a temporary Ansible Vault file and executes the \texttt{deploy-k8s.yml} playbook. This playbook dynamically updates the Kubernetes \texttt{Deployment} manifests with the new \texttt{IMAGE\_TAG} and applies them to the cluster.
+\subsection{Deployment Architecture}
+The entire application runs inside a Kubernetes cluster (Minikube for local/dev). All services are containerized using Docker. Deployment state is managed declaratively via Ansible and applied as Kustomize manifests.
 
-\section{Stage 8: Verify and Automatic Rollback}
-Jenkins triggers a final Ansible playbook (\texttt{verify-k8s.yml}) that polls the Kubernetes API to ensure all newly created pods have reached the \texttt{Running} state and passed their health probes. If verification fails or any previous stage crashes, a Jenkins \texttt{post \{ failure \}} block executes the \texttt{rollback-k8s.yml} playbook. This automatically instructs Kubernetes to revert the deployments to the previous stable \texttt{IMAGE\_TAG}, ensuring zero downtime.
+\subsection{Observability Architecture}
+The project migrated from ELK to the PLG (Prometheus, Loki, Grafana) stack for high-efficiency monitoring. Prometheus scrapes metrics, Promtail tails logs and ships them to Loki, and Grafana visualizes the unified data.
 
-\begin{figure}[H]
-    \centering
-    \vspace{7cm} % Space for Jenkins Pipeline screenshot
-    \caption{End-to-End Jenkins Declarative Pipeline Execution Flow}
-\end{figure}
-
-\chapter{Infrastructure Automation with Ansible}
-While Jenkins manages the CI pipeline, Ansible is strictly utilized for Configuration Management and Deployment Automation. Ansible bridges the gap between raw Docker images and a fully configured Kubernetes environment.
-
-\section{Dynamic Secret Management}
-Hardcoding secrets in Kubernetes manifests or GitHub is a major security vulnerability. Instead, Ansible utilizes \texttt{ansible-vault}. During the Jenkins deployment stage, plain-text secrets are passed to Ansible, which encrypts them into a \texttt{vault.yml} file. When Ansible executes the deployment, it decrypts these variables in memory and dynamically generates Kubernetes \texttt{Secret} manifests, ensuring credentials like \texttt{AUTH\_DB\_URL} and \texttt{JWT\_SECRET} remain entirely hidden from the source code.
-
-\section{Manifest Templating and State Enforcement}
-Ansible uses Jinja2 templating to dynamically inject the correct \texttt{IMAGE\_TAG} into the Kubernetes YAML files. It then connects to the cluster using the \texttt{kubernetes.core.k8s} module (or \texttt{kubectl apply} via command modules) to apply the desired state, orchestrating rolling updates across all microservices simultaneously.
-
-\chapter{Kubernetes Orchestration}
-The entire application operates within a local Minikube Kubernetes cluster, providing the scaling, networking, and self-healing features characteristic of enterprise deployments.
-
-\section{Cluster Topology}
+\subsection{Security Architecture}
+Security is multi-layered:
 \begin{itemize}
-    \item \textbf{Isolation:} All application components are isolated within a dedicated \texttt{smart-order} namespace to prevent collision with \texttt{kube-system} resources.
-    \item \textbf{Ingress Routing:} An Nginx Ingress Controller sits at the edge of the cluster. It inspects incoming HTTP requests and routes them based on URL paths (e.g., \texttt{/api/v1/...}) to the internal Spring Cloud API Gateway or the React Frontend \texttt{ClusterIP} services.
-    \item \textbf{Self-Healing \& Resources:} Every microservice is deployed as a \texttt{Deployment} resource. Kubernetes continuously monitors pod health via Liveness and Readiness probes. Furthermore, strict CPU and Memory \texttt{requests} and \texttt{limits} are enforced to prevent any single service from monopolizing node resources and causing cluster-wide instability.
+    \item \textbf{Edge:} Nginx Ingress Controller.
+    \item \textbf{Perimeter:} Spring Cloud Gateway validates all incoming JWTs.
+    \item \textbf{Secret Management:} Ansible Vault dynamically injects secrets at deployment time, keeping them out of version control and Kubernetes ConfigMaps.
 \end{itemize}
 
-\begin{figure}[H]
-    \centering
-    \vspace{8cm} % Space for Kubernetes diagram
-    \caption{Kubernetes Cluster Topology, Networking, and Ingress Routing}
-\end{figure}
+\section{Technology Stack}
 
-\chapter{Observability: The PLG Stack}
-Robust observability is crucial in a distributed microservices environment. Initially, the project employed the ELK stack (Elasticsearch, Logstash, Kibana). However, the heavy JVM overhead of Elasticsearch caused etcd timeouts and extreme instability within the constrained Minikube environment. Consequently, the architecture was successfully migrated to the highly efficient PLG stack (Prometheus, Loki, Grafana).
+\subsection{Frontend Technologies}
+\begin{itemize}
+    \item \textbf{Framework:} React 19
+    \item \textbf{Build Tool:} Vite (for lightning-fast HMR and optimized builds)
+    \item \textbf{Styling:} Tailwind CSS v4
+    \item \textbf{Icons:} Lucide React
+    \item \textbf{Routing:} React Router DOM
+\end{itemize}
 
-\section{Metrics Collection with Prometheus}
-A lightweight Prometheus instance is deployed to scrape hardware and orchestrator-level metrics. By integrating with cAdvisor, Prometheus continuously monitors the CPU throttling, memory consumption, and network I/O of every pod in the \texttt{smart-order} namespace.
+\subsection{Backend Technologies}
+\begin{itemize}
+    \item \textbf{Java Ecosystem:} Java 17+, Spring Boot 3.x, Spring Cloud Gateway, Maven.
+    \item \textbf{Go Ecosystem:} Go 1.20+, Fiber Web Framework (Express-inspired, low latency).
+\end{itemize}
 
-\section{Log Aggregation with Loki and Promtail}
-Loki serves as the log aggregation system, chosen for its index-free, highly compressed storage model. To feed Loki, Promtail is deployed as a Kubernetes \texttt{DaemonSet}. This ensures that a Promtail instance runs on every node, automatically tailing the \texttt{stdout} and \texttt{stderr} streams of all containers, enriching them with Kubernetes metadata labels (such as pod name and application name), and shipping them to Loki.
+\subsection{Database}
+\begin{itemize}
+    \item \textbf{Primary Datastore:} PostgreSQL (Hosted on Neon.tech for managed serverless scaling in dev).
+\end{itemize}
 
-\section{Unified Visualization with Grafana}
-Grafana acts as the single pane of glass for all observability data. Custom dashboards were engineered to query both Prometheus (via PromQL) and Loki (via LogQL) simultaneously. This unified view allows developers to correlate hardware resource spikes directly with application-level error logs, drastically reducing Mean Time To Resolution (MTTR) during debugging.
+\subsection{Containerization and Orchestration}
+\begin{itemize}
+    \item \textbf{Container Engine:} Docker
+    \item \textbf{Orchestrator:} Kubernetes (Minikube)
+    \item \textbf{Manifest Management:} Kustomize
+\end{itemize}
 
-\begin{figure}[H]
-    \centering
-    \vspace{7cm} % Space for Grafana Dashboard
-    \caption{Grafana Observability Dashboard: Correlating Prometheus Metrics with Loki Logs}
-\end{figure}
+\subsection{CI/CD and Automation}
+\begin{itemize}
+    \item \textbf{Automation Server:} Jenkins (Declarative Pipelines)
+\end{itemize}
 
-\begin{figure}[H]
-    \centering
-    \vspace{7cm} % Space for Loki Logs
-    \caption{Dedicated Loki Log Explorer for Real-Time Microservice Troubleshooting}
-\end{figure}
+\subsection{Configuration Management}
+\begin{itemize}
+    \item \textbf{Deployment Tool:} Ansible
+    \item \textbf{Secret Engine:} Ansible Vault
+\end{itemize}
 
-\chapter{Conclusion}
-The Smart Order Fulfillment System successfully demonstrates the end-to-end lifecycle of a complex, polyglot microservices architecture. By integrating React, Spring Boot, and Go, it achieves both transactional reliability and high performance. The extensive use of Docker and Kubernetes ensures scalability, while the automated Jenkins and Ansible pipelines guarantee zero-downtime, predictable deployments. Finally, the migration to the PLG stack showcases a pragmatic approach to infrastructure optimization, resulting in a production-ready, highly observable cloud-native application.
+\subsection{Logging and Monitoring (PLG Stack)}
+\begin{itemize}
+    \item \textbf{Metrics:} Prometheus (with cAdvisor integration)
+    \item \textbf{Logs:} Loki (via Promtail DaemonSet)
+    \item \textbf{Visualization:} Grafana
+\end{itemize}
+
+\section{Frontend Architecture and Implementation}
+
+\subsection{Frontend Architecture Overview}
+The frontend leverages a component-based architecture using React. The Vite build system provides sub-second hot module replacement during development and aggressive tree-shaking during production builds.
+
+\subsection{Communication with Backend}
+All HTTP requests are orchestrated using Axios. A global Axios interceptor is configured to automatically attach the user's JWT (stored securely) to the \texttt{Authorization} header of every outbound request targeting the API Gateway.
+
+\subsection{User Interface Flow}
+The UI is divided into public routes (Login, Register) and protected routes (Dashboard, Order History). React Router handles the transition between these views seamlessly without page reloads.
+
+\subsection{Authentication Handling}
+Authentication state is managed by decoding the JWT payload locally. Upon a 401 Unauthorized response from the API Gateway, the application automatically clears local session data and redirects the user to the login screen.
+
+\subsection{Frontend Deployment}
+The frontend is built via a multi-stage Dockerfile. The first stage uses Node.js to compile the Vite project into static HTML/CSS/JS assets. The second stage serves these assets using a lightweight Nginx container, drastically reducing the final image size.
+
+\section{Backend Architecture and Implementation}
+
+\subsection{Backend Design Principles}
+The backend enforces strict bounded contexts. The Order service, for example, knows nothing about the internal database schema of the Inventory service.
+
+\subsection{Backend Service Composition}
+\begin{itemize}
+    \item \textbf{Transactional Core:} Spring Boot handles complex state machines, ACID transactions, and complex object-relational mapping (Hibernate).
+    \item \textbf{High-Throughput Edge:} Go handles tasks like geographical distance calculations (Warehouse routing) and asynchronous I/O (SMTP email dispatch) where CPU and memory efficiency is paramount.
+\end{itemize}
+
+\subsection{Synchronous Service Communication}
+When immediate consistency is required (e.g., checking if inventory exists before confirming an order), services communicate synchronously over HTTP. The Kubernetes internal DNS (\texttt{service-name.namespace.svc.cluster.local}) is used for service discovery.
+
+\section{API Gateway}
+
+\subsection{Role of the API Gateway}
+The API Gateway acts as a reverse proxy and the single point of entry into the internal network. It abstracts the complexity of the microservices architecture from the frontend.
+
+\subsection{Routing Mechanism}
+Using Spring Cloud Gateway, incoming requests are routed based on path predicates (e.g., \texttt{/api/v1/orders/**} maps to the \texttt{order-service}).
+
+\subsection{Security and CORS}
+The gateway centralizes Cross-Origin Resource Sharing (CORS) configurations and performs global JWT validation. If a token is invalid or expired, the request is dropped before it ever consumes resources on the downstream microservices.
+
+\section{Auth Service}
+
+\subsection{Core Responsibilities}
+The Auth Service manages user registration, credential verification, and token issuance.
+
+\subsection{JWT-Based Security}
+Upon successful login, the service generates a signed JSON Web Token. The signature is created using a highly secure, base64-encoded secret stored in Ansible Vault.
+
+\subsection{Google OAuth 2.0 Integration}
+The system supports social login. The frontend receives an OAuth token from Google, which the Auth Service securely verifies against Google's public key endpoints before issuing an internal JWT.
+
+\subsection{Database Design}
+The Auth PostgreSQL database simply maps UUIDs to email addresses, encrypted passwords, and role designations.
+
+\section{Core Business Services}
+
+\subsection{Order Service}
+Responsible for maintaining the canonical state of a customer's purchase. It orchestrates the flow: validating the user, verifying inventory, confirming the warehouse, and dispatching delivery instructions.
+
+\subsection{Inventory Service}
+Manages stock levels. It implements robust database-level locking and transaction isolation to prevent race conditions (e.g., two users purchasing the last item simultaneously) during high concurrency spikes.
+
+\section{Go Microservices Ecosystem}
+
+\subsection{Warehouse Service}
+Written in Go using Fiber. It is responsible for routing logistics. When an order is placed, this service calculates the geographical distance between the customer and various warehouses to select the most optimal dispatch location.
+
+\subsection{Delivery Service}
+Manages the assignment of delivery personnel and provides tracking endpoints. Go's lightweight goroutines make it exceptionally well-suited for tracking thousands of simultaneous active deliveries.
+
+\subsection{Notification Service}
+An asynchronous worker service. It listens for HTTP webhooks triggered by the Order Service and dispatches confirmation emails via an external SMTP server. Go ensures that SMTP latency does not block the main order flow.
+
+\section{Database Layer}
+
+\subsection{Schema Design}
+Each service operates its own PostgreSQL schema. Migrations and schema creation are handled either via Spring Data JPA (Hibernate auto-ddl) or standalone \texttt{schema.sql} scripts mapped into the containers.
+
+\subsection{Consistency and Reliability}
+By avoiding a monolithic database, the "blast radius" of a database failure is minimized. An outage in the Delivery DB does not prevent users from browsing products or placing new orders.
+
+\section{Docker Containerization}
+
+\subsection{Service Containerization}
+Every application component is containerized. Dockerfiles are standardized across the repository.
+
+\subsection{BuildKit and Caching}
+The CI pipeline leverages Docker BuildKit (\texttt{BUILDKIT\_INLINE\_CACHE=1}) to dramatically speed up build times by reusing cached layers from previous builds, saving crucial minutes during CI execution.
+
+\section{Jenkins and CI/CD Automation}
+
+\subsection{Overall CI/CD Architecture}
+The system employs a fully declarative \texttt{Jenkinsfile}. Upon every Git push, Jenkins orchestrates a multi-stage pipeline: Checkout, Build, Test, Push to Registry, and Deploy.
+
+\subsection{Sequential Builds and Resource Management}
+To prevent out-of-memory errors on Jenkins worker nodes, resource-intensive Maven and Go builds are executed sequentially rather than concurrently.
+
+\subsection{Automated Rollbacks}
+A critical feature of the Jenkins pipeline is its \texttt{post \{ failure \}} block. If the deployment stage fails, or if health checks do not pass, Jenkins automatically triggers an Ansible rollback playbook (\texttt{rollback-k8s.yml}) to instantly revert the Kubernetes cluster to the previous stable image tag.
+
+\section{Ansible Deployment Automation}
+
+\subsection{Deployment Playbooks}
+Ansible replaces shell scripts for deployment. The \texttt{deploy-k8s.yml} playbook connects to the Minikube cluster and injects dynamic configuration variables.
+
+\subsection{Secret Management with Ansible Vault}
+No secrets are stored in Git. Jenkins injects credentials into an encrypted \texttt{ansible-vault} file during the pipeline run. Ansible decrypts this file in memory and safely creates Kubernetes \texttt{Secret} manifests, applying them directly to the cluster.
+
+\section{Kubernetes Orchestration}
+
+\subsection{Role of Kubernetes in the System}
+Kubernetes (Minikube) manages container lifecycle, networking, and scaling.
+
+\subsection{Namespaces and Logical Isolation}
+All microservices are deployed within a dedicated \texttt{smart-order} namespace to ensure they do not interfere with system-level pods.
+
+\subsection{Service Discovery and Networking}
+Kubernetes \texttt{Service} resources (ClusterIP) provide stable internal IP addresses and DNS names for the dynamic pods, allowing the API Gateway to reliably route traffic without hardcoding IP addresses.
+
+\section{PLG Stack for Observability}
+
+\subsection{Migration from ELK to PLG}
+The project intentionally migrated away from Elasticsearch to Loki. Loki's index-free, label-based architecture requires significantly less RAM, preventing Minikube cluster instability while providing excellent log aggregation capabilities.
+
+\subsection{Prometheus and Promtail}
+Prometheus continuously scrapes system metrics (CPU, RAM). Promtail runs as a DaemonSet, capturing standard output from all Docker containers and shipping it to Loki.
+
+\subsection{Grafana Unified Dashboards}
+Grafana connects to both Prometheus and Loki, allowing developers to view request latency spikes and immediately correlate them with specific error logs in a single dashboard view.
+
+\section{Testing Strategy}
+Automated tests are enforced within the Jenkins pipeline. Spring Boot services use JUnit and Mockito; Go services utilize the native \texttt{go test} framework. The CI aborts immediately if any test fails, preventing broken code from reaching the registry.
+
+\section{Innovative Solutions and Unique Approaches}
+
+\subsection{Smart CI/CD with Differential Tags}
+Every deployment is tagged with the Jenkins Build Number and the Git Commit Hash (e.g., \texttt{42-a1b2c3d}). This creates an immutable audit trail from production containers directly back to the exact code change in GitHub.
+
+\subsection{Twin Service Benchmarking}
+A unique architectural experiment within the project is the existence of the \texttt{warehouse-twin}. The warehouse routing logic was written in both Spring Boot and Go. This allows the team to perform live A/B benchmarking to compare JVM Garbage Collection pauses against Go's lightweight runtime under massive parallel load.
+
+\subsection{Ansible-Driven Dynamic Secrets}
+By combining Jenkins credential binding with Ansible Vault, the project achieves an enterprise-grade secret injection mechanism that is completely transparent to the developer yet entirely secure in the repository.
 
 \end{document}
