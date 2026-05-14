@@ -133,9 +133,18 @@ GIT_COMMIT=${env.GIT_COMMIT}
                     sh 'echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin'
                     script {
                         allServices.each { svc ->
-                            sh "docker push ${env.REGISTRY}/${svc}:${env.IMAGE_TAG}"
+                            // Retry up to 3 times to handle transient Docker Hub blob upload errors
+                            retry(3) {
+                                sh """
+                                  docker push ${env.REGISTRY}/${svc}:${env.IMAGE_TAG} || (sleep 10 && exit 1)
+                                """
+                            }
                             sh "docker tag ${env.REGISTRY}/${svc}:${env.IMAGE_TAG} ${env.REGISTRY}/${svc}:latest-ci"
-                            sh "docker push ${env.REGISTRY}/${svc}:latest-ci"
+                            retry(3) {
+                                sh """
+                                  docker push ${env.REGISTRY}/${svc}:latest-ci || (sleep 10 && exit 1)
+                                """
+                            }
                         }
                     }
                 }
