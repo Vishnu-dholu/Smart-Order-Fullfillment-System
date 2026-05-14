@@ -1,0 +1,80 @@
+{
+  "title": "Smart Order Observability",
+  "tags": ["kubernetes", "lpg", "plg"],
+  "timezone": "browser",
+  "refresh": "10s",
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "CPU Core Usage per Pod",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"smart-order\", pod!=\"\", container!=\"POD\", container!=\"\"}[1m])) by (pod)",
+          "legendFormat": "{{pod}}",
+          "refId": "A"
+        }
+      ],
+      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 0 },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 10
+          },
+          "unit": "cores"
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Memory Usage per Pod",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(container_memory_usage_bytes{namespace=\"smart-order\", pod!=\"\", container!=\"POD\", container!=\"\"}) by (pod)",
+          "legendFormat": "{{pod}}",
+          "refId": "A"
+        }
+      ],
+      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 0 },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 10
+          },
+          "unit": "bytes"
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Error Log Rate per Service",
+      "datasource": "Loki",
+      "targets": [
+        {
+          "expr": "sum by (container) (rate({namespace=\"smart-order\"} |= \"ERROR\" [1m]))",
+          "legendFormat": "{{container}}",
+          "refId": "A"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 10 },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 0,
+            "fillOpacity": 80
+          },
+          "unit": "reqps"
+        }
+      }
+    }
+  ],
+  "schemaVersion": 36
+}
