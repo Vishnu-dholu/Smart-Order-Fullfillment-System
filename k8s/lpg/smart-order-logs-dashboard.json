@@ -1,0 +1,83 @@
+{
+  "title": "Smart Order Logs Deep-Dive",
+  "tags": ["kubernetes", "lpg", "logs"],
+  "timezone": "browser",
+  "refresh": "10s",
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Log Volume by Service",
+      "datasource": "Loki",
+      "targets": [
+        {
+          "expr": "sum by (container) (rate({namespace=\"smart-order\", container!=\"\"}[1m]))",
+          "legendFormat": "{{container}}",
+          "refId": "A"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "lineWidth": 2
+          },
+          "unit": "reqps"
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Logs by Severity Level",
+      "datasource": "Loki",
+      "targets": [
+        {
+          "expr": "sum(rate({namespace=\"smart-order\", container!=\"\"} |~ \"(?i)(level=error|\\\\\"level\\\\\":\\\\\"error\\\\\")\" [1m]))",
+          "legendFormat": "ERROR",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(rate({namespace=\"smart-order\", container!=\"\"} |~ \"(?i)(level=warn|\\\\\"level\\\\\":\\\\\"warn\\\\\")\" [1m]))",
+          "legendFormat": "WARN",
+          "refId": "B"
+        },
+        {
+          "expr": "sum(rate({namespace=\"smart-order\", container!=\"\"} |~ \"(?i)(level=info|\\\\\"level\\\\\":\\\\\"info\\\\\")\" [1m]))",
+          "legendFormat": "INFO",
+          "refId": "C"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "lineWidth": 0
+          },
+          "unit": "reqps"
+        }
+      }
+    },
+    {
+      "type": "logs",
+      "title": "Live Application Logs (Streaming)",
+      "datasource": "Loki",
+      "targets": [
+        {
+          "expr": "{namespace=\"smart-order\", container!=\"\"} | json",
+          "refId": "A"
+        }
+      ],
+      "gridPos": { "h": 15, "w": 24, "x": 0, "y": 8 },
+      "options": {
+        "showLabels": true,
+        "showTime": true,
+        "wrapLogMessage": true,
+        "sortOrder": "Descending"
+      }
+    }
+  ],
+  "schemaVersion": 36
+}

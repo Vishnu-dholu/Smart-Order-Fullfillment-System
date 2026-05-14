@@ -1,0 +1,265 @@
+\documentclass[12pt,a4paper]{report}
+
+% =========================
+% Packages
+% =========================
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{xcolor}
+
+% =========================
+% Header/Footer
+% =========================
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{Smart Order Fulfillment System}
+\fancyhead[R]{Final Project Report}
+\fancyfoot[C]{\thepage}
+
+% =========================
+% Title
+% =========================
+\title{
+    \Huge \textbf{Final Project Report} \\
+    \vspace{1cm}
+    \Large Smart Order Fulfillment System: A Cloud-Native Microservices Platform
+}
+
+\author{
+    [Contributor 1 Name] -- [ID 1] \\
+    [Contributor 2 Name] -- [ID 2]
+}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+% =========================
+% GitHub Repositories
+% =========================
+\section*{GitHub Repositories}
+
+\textbf{Project Repository:} \\
+\url{https://github.com/Vishnu-dholu/Smart-Order-Fullfillment-System}
+
+\tableofcontents
+\newpage
+
+% =========================
+% Chapter 1
+% =========================
+\chapter{System Overview}
+
+\section{Introduction}
+The Smart Order Fulfillment System is a highly scalable, cloud-native application designed to manage the entire lifecycle of an order, from placement and inventory deduction to warehouse routing and delivery dispatch. The system is built using a modern microservices architecture to ensure resilience, maintainability, and horizontal scalability.
+
+\section{Core Functionalities}
+\begin{itemize}
+    \item \textbf{Order Management:} Processing user orders and tracking status.
+    \item \textbf{Inventory Management:} Real-time stock deduction and tracking.
+    \item \textbf{Warehouse Routing:} Assigning orders to the nearest optimal warehouse.
+    \item \textbf{Delivery Dispatch:} Managing logistics and delivery personnel assignments.
+    \item \textbf{Real-Time Notifications:} Sending email and push notifications regarding order status.
+\end{itemize}
+
+\section{Microservices-Based Design}
+The application decomposes the domain into loosely coupled, highly cohesive microservices. Each service owns its database to guarantee data encapsulation and is independently deployable via automated CI/CD pipelines.
+
+% =========================
+% Chapter 2
+% =========================
+\chapter{Overall System Architecture}
+
+\section{Architectural Style}
+The system employs a polyglot microservices architecture, utilizing Spring Boot (Java) for core business logic and Go (Golang) for high-performance peripheral services.
+
+\begin{figure}[H]
+    \centering
+    % Placeholder: Add your architecture diagram to the images/ folder
+    % \includegraphics[width=\textwidth]{images/architecture-diagram.png}
+    \caption{High-Level System Architecture}
+\end{figure}
+
+\section{Frontend Architecture}
+The frontend is a Single Page Application (SPA) built with React and Vite. It communicates exclusively with the API Gateway, which handles cross-origin requests (CORS) and routes them to the appropriate internal services.
+
+\section{Backend Microservices Architecture}
+The backend consists of several discrete services, including the API Gateway, Auth Service, Order Service, Inventory Service, Warehouse Service, Delivery Service, and Notification Service.
+
+\section{Deployment and Orchestration Architecture}
+All services are containerized using Docker and orchestrated via Kubernetes (Minikube). Traffic is routed into the cluster using an Nginx Ingress Controller.
+
+% =========================
+% Chapter 3
+% =========================
+\chapter{Technology Stack}
+
+\section{Frontend Technologies}
+\begin{itemize}
+    \item \textbf{Framework:} React.js
+    \item \textbf{Build Tool:} Vite
+    \item \textbf{Styling:} TailwindCSS / Vanilla CSS
+\end{itemize}
+
+\section{Backend Technologies}
+\begin{itemize}
+    \item \textbf{Java Ecosystem:} Spring Boot, Spring Cloud Gateway, Spring Security
+    \item \textbf{Go Ecosystem:} Fiber, Zerolog
+\end{itemize}
+
+\section{Database}
+\begin{itemize}
+    \item \textbf{Relational Database:} PostgreSQL
+    \item \textbf{Connection Pooling:} HikariCP
+\end{itemize}
+
+\section{DevOps and Infrastructure}
+\begin{itemize}
+    \item \textbf{Containerization:} Docker
+    \item \textbf{CI/CD Automation:} Jenkins
+    \item \textbf{Configuration Management:} Ansible
+    \item \textbf{Container Orchestration:} Kubernetes (Minikube)
+    \item \textbf{Observability:} Prometheus, Loki, Promtail, Grafana (PLG Stack)
+\end{itemize}
+
+% =========================
+% Chapter 4
+% =========================
+\chapter{Frontend Implementation}
+
+\section{Frontend Architecture Overview}
+The React application is designed to be highly responsive and stateless. Authentication tokens (JWTs) are securely managed and attached to outgoing requests using Axios interceptors.
+
+\section{Environment Configuration}
+To enable seamless deployment across environments, environment variables (e.g., \texttt{VITE\_API\_GATEWAY\_URL}) are baked into the production bundle during the Docker build process, preventing hardcoded \texttt{localhost} references.
+
+\begin{figure}[H]
+    \centering
+    % Placeholder: Add your frontend UI screenshot
+    % \includegraphics[width=0.8\textwidth]{images/frontend-ui.png}
+    \caption{Frontend User Dashboard}
+\end{figure}
+
+% =========================
+% Chapter 5
+% =========================
+\chapter{Backend Microservices}
+
+\section{API Gateway}
+The API Gateway serves as the single entry point for the frontend. It is responsible for route resolution, CORS configuration, and centralizing authentication filters.
+
+\section{Auth Service}
+Handles user registration, login, and Google OAuth 2.0 integration. It issues JWT tokens containing role-based claims (e.g., \texttt{ROLE\_ADMIN}, \texttt{ROLE\_USER}) which are validated by downstream services.
+
+\section{Core Business Services}
+\begin{itemize}
+    \item \textbf{Order Service:} Manages order creation and lifecycle state machines.
+    \item \textbf{Inventory Service:} Handles stock reservations and adjustments.
+    \item \textbf{Warehouse Service:} Calculates optimal routing logic. A unique aspect of this project involved building identical "Twin" warehouse services in both Go and Spring Boot to benchmark performance.
+    \item \textbf{Delivery \& Notification Services:} Handle asynchronous downstream tasks.
+\end{itemize}
+
+% =========================
+% Chapter 6
+% =========================
+\chapter{Docker Containerization}
+
+\section{Service Containerization}
+Every service in the system includes a multi-stage \texttt{Dockerfile}. This approach ensures that the build environment (e.g., Maven, Go compiler) is separated from the runtime environment, resulting in highly optimized, lightweight production images.
+
+\section{Docker Compose for Local Development}
+A comprehensive \texttt{docker-compose.yml} file manages the local development lifecycle, defining shared networks and mounting initialization scripts for the PostgreSQL databases.
+
+% =========================
+% Chapter 7
+% =========================
+\chapter{CI/CD Automation: Jenkins and Ansible}
+
+\section{Jenkins Pipeline Architecture}
+The CI/CD pipeline is defined via a \texttt{Jenkinsfile}. It consists of modular stages:
+\begin{enumerate}
+    \item \textbf{Checkout:} Pulling the latest code from GitHub.
+    \item \textbf{Build:} Compiling Java, Go, and React applications.
+    \item \textbf{Dockerize:} Building Docker images and pushing them to the container registry.
+    \item \textbf{Deploy:} Triggering Ansible playbooks to update the Kubernetes cluster.
+\end{enumerate}
+
+\section{Ansible Automation}
+Ansible playbooks are utilized to bridge the gap between the CI server and the Kubernetes cluster. The playbooks dynamically replace image tags in the Kubernetes manifests and execute \texttt{kubectl apply} commands, ensuring zero-downtime rolling updates.
+
+\begin{figure}[H]
+    \centering
+    % Placeholder: Add your Jenkins pipeline success screenshot
+    % \includegraphics[width=\textwidth]{images/jenkins-pipeline.png}
+    \caption{Jenkins CI/CD Pipeline Execution}
+\end{figure}
+
+% =========================
+% Chapter 8
+% =========================
+\chapter{Kubernetes Orchestration}
+
+\section{Cluster Setup and Networking}
+The system runs on a local Minikube cluster. An Nginx Ingress Controller routes external HTTP traffic to the internal \texttt{api-gateway} and \texttt{frontend} services based on URL paths.
+
+\section{Namespaces and Isolation}
+All application components, including databases and observability tools, are isolated within the \texttt{smart-order} namespace to prevent conflicts with system components.
+
+\section{Resource Management}
+Services are deployed using Kubernetes \texttt{Deployment} resources with strict memory requests and limits to ensure cluster stability and prevent Out-Of-Memory (OOM) crashes.
+
+% =========================
+% Chapter 9
+% =========================
+\chapter{Observability: The PLG Stack}
+
+\section{Migration from ELK to PLG}
+Initially, the project utilized the ELK stack (Elasticsearch, Logstash, Kibana) for centralized logging. However, due to its heavy resource consumption causing etcd timeouts and cluster instability in Minikube, the system was migrated to the lightweight PLG stack (Prometheus, Loki, Grafana).
+
+\section{Logging with Loki and Promtail}
+Promtail is deployed as a Kubernetes \texttt{DaemonSet}. It scrapes logs from all containers in the \texttt{smart-order} namespace, automatically extracts metadata labels (such as \texttt{pod} and \texttt{container}), and pushes the streams to Loki for centralized, indexed storage.
+
+\section{Metrics with Prometheus}
+A lightweight Prometheus instance is configured to scrape hardware metrics (CPU and Memory) directly from the Kubernetes node via cAdvisor, providing real-time insights into pod resource consumption.
+
+\section{Grafana Dashboards}
+Grafana serves as the unified visualization layer. Custom dashboards were developed to correlate Prometheus hardware metrics with Loki application logs. 
+
+\begin{figure}[H]
+    \centering
+    % Placeholder: Add your Grafana Dashboard screenshot
+    % \includegraphics[width=\textwidth]{images/grafana-dashboard.png}
+    \caption{Custom Observability Dashboard: CPU, Memory, and Error Log Rates}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    % Placeholder: Add your Loki Logs Dashboard screenshot
+    % \includegraphics[width=\textwidth]{images/grafana-logs.png}
+    \caption{Dedicated Loki Logs Deep-Dive Dashboard}
+\end{figure}
+
+% =========================
+% Chapter 10
+% =========================
+\chapter{Conclusion and Innovative Approaches}
+
+\section{Go vs Spring Boot Benchmarking}
+A unique technical achievement in this project was the implementation of "Twin" microservices. By building identical Warehouse services in both Java (Spring Boot) and Go, the team was able to conduct rigorous, side-by-side performance profiling to analyze latency, CPU utilization, and Garbage Collection overheads under identical load conditions.
+
+\section{Robust Observability}
+The implementation of the PLG stack ensures that the system is fully production-ready, offering developers immediate visibility into both hardware constraints and application-level errors through customized, single-pane-of-glass dashboards.
+
+\end{document}
