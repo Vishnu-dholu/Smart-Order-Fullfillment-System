@@ -23,7 +23,7 @@ pipeline {
     }
 
     environment {
-        REGISTRY = 'parva04'
+        REGISTRY = 'vishnudholu'
         ANSIBLE_CONFIG = 'ansible/ansible.cfg'
         ANSIBLE_INVENTORY = "ansible/inventories/${params.DEPLOY_ENV}/hosts.yml"
     }
