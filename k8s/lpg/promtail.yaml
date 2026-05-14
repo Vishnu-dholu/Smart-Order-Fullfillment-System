@@ -55,6 +55,15 @@ data:
           __path__: /var/log/pods/*/*/*.log
       pipeline_stages:
       - cri: {}
+      - regex:
+          # Extract namespace, pod, and container from the default k8s log path
+          # Example: /var/log/pods/smart-order_api-gateway-123_456/api-gateway/0.log
+          expression: '^/var/log/pods/(?P<namespace>[a-zA-Z0-9_-]+)_(?P<pod>[a-zA-Z0-9_-]+)_[a-f0-9-]+/(?P<container>[a-zA-Z0-9_-]+)/.*\.log$'
+          source: filename
+      - labels:
+          namespace:
+          pod:
+          container:
 ---
 apiVersion: apps/v1
 kind: DaemonSet
