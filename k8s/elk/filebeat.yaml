@@ -1,0 +1,75 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: filebeat-config
+  namespace: smart-order
+data:
+  filebeat.yml: |
+    filebeat.inputs:
+      - type: container
+        paths:
+          - /var/log/pods/smart-order_*/*/*.log   # only smart-order namespace
+        processors:
+          - add_kubernetes_metadata:
+            host: ${NODE_NAME}
+            matchers:
+              - logs_path:
+                  logs_path: "/var/log/pods/"
+
+    output.logstash:
+      hosts: ["logstash:5044"]
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: filebeat
+  namespace: smart-order
+spec:
+  selector: { matchLabels: { app: filebeat } }
+  template:
+    metadata: { labels: { app: filebeat } }
+    spec:
+      serviceAccountName: filebeat
+      containers:
+        - name: filebeat
+          image: docker.elastic.co/beats/filebeat:8.13.0
+          args: ["-c", "/etc/filebeat.yml", "-e"]
+          env:
+            - { name: NODE_NAME, valueFrom: { fieldRef: { fieldPath: spec.nodeName } } }
+          resources:
+            limits:   { memory: "200Mi", cpu: "100m" }
+            requests: { memory: "100Mi", cpu: "50m" }
+          volumeMounts:
+            - { name: config,    mountPath: /etc/filebeat.yml, subPath: filebeat.yml }
+            - { name: varlogs,   mountPath: /var/log/pods,     readOnly: true }
+            - { name: varlogcon, mountPath: /var/lib/docker/containers, readOnly: true }
+      volumes:
+        - name: config
+          configMap: { name: filebeat-config }
+        - name: varlogs
+          hostPath: { path: /var/log/pods }
+        - name: varlogcon
+          hostPath: { path: /var/lib/docker/containers }
+---
+# RBAC for Filebeat to discover pod metadata
+apiVersion: v1
+kind: ServiceAccount
+metadata: { name: filebeat, namespace: smart-order }
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata: { name: filebeat }
+rules:
+  - apiGroups: [""] 
+    resources: [namespaces, pods, nodes]
+    verbs: [get, list, watch]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata: { name: filebeat }
+subjects:
+  - { kind: ServiceAccount, name: filebeat, namespace: smart-order }
+roleRef:
+  kind: ClusterRole
+  name: filebeat
+  apiGroup: rbac.authorization.k8s.io

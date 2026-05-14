@@ -1,13 +1,10 @@
-# Real credentials for dev environment — convert to ansible-vault encrypted in production
-vault_jwt_secret: "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970"
-vault_internal_service_token: "smartfill-internal-token"
-
-vault_auth_db_url: "jdbc:postgresql://ep-round-frost-a10slzy6-pooler.ap-southeast-1.aws.neon.tech/auth_db?user=auth_admin&password=auth_admin(123)&sslmode=require"
-vault_order_db_url: "jdbc:postgresql://ep-round-frost-a10slzy6-pooler.ap-southeast-1.aws.neon.tech/order_db?user=order_admin&password=order_admin(123)&sslmode=require"
-vault_inventory_db_url: "jdbc:postgresql://ep-round-frost-a10slzy6-pooler.ap-southeast-1.aws.neon.tech/inventory_db?user=inventory_admin&password=inventory_admin(123)&sslmode=require"
-vault_warehouse_db_url: "postgresql://warehouse_admin:warehouse_admin%28123%29@ep-round-frost-a10slzy6-pooler.ap-southeast-1.aws.neon.tech/warehouse_db?sslmode=require&channel_binding=require"
-vault_delivery_db_url: "postgresql://warehouse_admin:warehouse_admin%28123%29@ep-round-frost-a10slzy6-pooler.ap-southeast-1.aws.neon.tech/delivery_db?sslmode=require&channel_binding=require"
-vault_notification_db_url: "postgresql://neondb_owner:npg_E9uxBr7CoONW@ep-round-frost-a10slzy6-pooler.ap-southeast-1.aws.neon.tech/notification_db?sslmode=require&channel_binding=require"
-
-vault_smtp_email: "bitbuster08@gmail.com"
-vault_smtp_password: "utko hdog pjdo makh"
+vault_jwt_secret: "dummy"
+vault_internal_service_token: "dummy"
+vault_auth_db_url: "dummy"
+vault_order_db_url: "dummy"
+vault_inventory_db_url: "dummy"
+vault_warehouse_db_url: "dummy"
+vault_delivery_db_url: "dummy"
+vault_notification_db_url: "dummy"
+vault_smtp_email: "dummy"
+vault_smtp_password: "dummy"
