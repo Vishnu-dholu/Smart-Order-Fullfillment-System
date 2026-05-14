@@ -147,12 +147,10 @@ GIT_COMMIT=${env.GIT_COMMIT}
                 expression { !params.ROLLBACK_ONLY }
             }
             steps {
-                withCredentials([sshUserPrivateKey(credentialsId: 'ANSIBLE_SSH_KEY', keyFileVariable: 'ANSIBLE_KEY', usernameVariable: 'ANSIBLE_USER')]) {
+                withCredentials([sshUserPrivateKey(credentialsId: 'ANSIBLE_SSH_KEY', keyFileVariable: 'ANSIBLE_KEY')]) {
                     script {
                         allServices.each { svc ->
-                            sh """
-                              ssh -o StrictHostKeyChecking=no -i "\$ANSIBLE_KEY" "\$ANSIBLE_USER"@127.0.0.1 "minikube image load ${env.REGISTRY}/${svc}:${env.IMAGE_TAG}" || true
-                            """
+                            sh "ssh -o StrictHostKeyChecking=no -i \$ANSIBLE_KEY vishnu-dholu@127.0.0.1 \"minikube image load ${env.REGISTRY}/${svc}:${env.IMAGE_TAG}\" || true"
                         }
                     }
                 }
@@ -164,7 +162,7 @@ GIT_COMMIT=${env.GIT_COMMIT}
                 script {
                     withCredentials([
                         file(credentialsId: 'ANSIBLE_VAULT_PASSWORD_FILE', variable: 'VAULT_FILE'),
-                        sshUserPrivateKey(credentialsId: 'ANSIBLE_SSH_KEY', keyFileVariable: 'ANSIBLE_KEY', usernameVariable: 'ANSIBLE_USER'),
+                        sshUserPrivateKey(credentialsId: 'ANSIBLE_SSH_KEY', keyFileVariable: 'ANSIBLE_KEY'),
                         string(credentialsId: 'JWT_SECRET', variable: 'JWT_SECRET'),
                         string(credentialsId: 'INTERNAL_SERVICE_TOKEN', variable: 'INTERNAL_SERVICE_TOKEN'),
                         string(credentialsId: 'AUTH_DB_URL', variable: 'AUTH_DB_URL'),
@@ -200,7 +198,7 @@ EOF
                                     -e target_env=${params.DEPLOY_ENV} \
                                     -e project_src_dir=\$PWD \
                                     --vault-password-file "\$VAULT_FILE" \
-                                    --private-key "\$ANSIBLE_KEY" -u "\$ANSIBLE_USER"
+                                    --private-key "\$ANSIBLE_KEY" -u "vishnu-dholu"
                                 """
                             } else {
                                 if (!env.IMAGE_TAG?.trim()) {
@@ -213,7 +211,7 @@ EOF
                                     -e project_src_dir=\$PWD \
                                     -e k8s_registry=${env.REGISTRY} \
                                     --vault-password-file "\$VAULT_FILE" \
-                                    --private-key "\$ANSIBLE_KEY" -u "\$ANSIBLE_USER"
+                                    --private-key "\$ANSIBLE_KEY" -u "vishnu-dholu"
                                 """
                             }
                         } finally {
@@ -230,13 +228,13 @@ EOF
             }
             steps {
                 withCredentials([
-                    sshUserPrivateKey(credentialsId: 'ANSIBLE_SSH_KEY', keyFileVariable: 'ANSIBLE_KEY', usernameVariable: 'ANSIBLE_USER')
+                    sshUserPrivateKey(credentialsId: 'ANSIBLE_SSH_KEY', keyFileVariable: 'ANSIBLE_KEY')
                 ]) {
                     sh """
                       ansible-playbook -i ${env.ANSIBLE_INVENTORY} ansible/playbooks/verify-k8s.yml \
                         -e target_env=${params.DEPLOY_ENV} \
                         -e project_src_dir=\$PWD \
-                        --private-key "\$ANSIBLE_KEY" -u "\$ANSIBLE_USER"
+                        --private-key "\$ANSIBLE_KEY" -u "vishnu-dholu"
                     """
                 }
             }
@@ -249,14 +247,24 @@ EOF
                 echo 'Pipeline failed. Attempting Kubernetes rollback via Ansible...'
                 withCredentials([
                     file(credentialsId: 'ANSIBLE_VAULT_PASSWORD_FILE', variable: 'VAULT_FILE'),
-                    sshUserPrivateKey(credentialsId: 'ANSIBLE_SSH_KEY', keyFileVariable: 'ANSIBLE_KEY', usernameVariable: 'ANSIBLE_USER')
+                    sshUserPrivateKey(credentialsId: 'ANSIBLE_SSH_KEY', keyFileVariable: 'ANSIBLE_KEY'),
+                    string(credentialsId: 'JWT_SECRET', variable: 'JWT_SECRET'),
+                    string(credentialsId: 'INTERNAL_SERVICE_TOKEN', variable: 'INTERNAL_SERVICE_TOKEN'),
+                    string(credentialsId: 'AUTH_DB_URL', variable: 'AUTH_DB_URL'),
+                    string(credentialsId: 'ORDER_DB_URL', variable: 'ORDER_DB_URL'),
+                    string(credentialsId: 'INVENTORY_DB_URL', variable: 'INVENTORY_DB_URL'),
+                    string(credentialsId: 'WAREHOUSE_DB_URL', variable: 'WAREHOUSE_DB_URL'),
+                    string(credentialsId: 'DELIVERY_DB_URL', variable: 'DELIVERY_DB_URL'),
+                    string(credentialsId: 'NOTIFICATION_DB_URL', variable: 'NOTIFICATION_DB_URL'),
+                    string(credentialsId: 'SMTP_EMAIL', variable: 'SMTP_EMAIL'),
+                    string(credentialsId: 'SMTP_PASSWORD', variable: 'SMTP_PASSWORD')
                 ]) {
                     sh """
                       ansible-playbook -i ${env.ANSIBLE_INVENTORY} ansible/playbooks/rollback-k8s.yml \
                         -e target_env=${params.DEPLOY_ENV} \
                         -e project_src_dir=\$PWD \
                         --vault-password-file "\$VAULT_FILE" \
-                        --private-key "\$ANSIBLE_KEY" -u "\$ANSIBLE_USER" || true
+                        --private-key "\$ANSIBLE_KEY" -u "vishnu-dholu" || true
                     """
                 }
             }
