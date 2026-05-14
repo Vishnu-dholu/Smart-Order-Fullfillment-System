@@ -6,17 +6,28 @@
   ansible.builtin.shell: |
     kubectl create secret generic {{ k8s_secret_name }} \
       --namespace={{ k8s_namespace }} \
-      --from-literal=JWT_SECRET='{{ vault_jwt_secret }}' \
-      --from-literal=INTERNAL_SERVICE_TOKEN='{{ vault_internal_service_token }}' \
-      --from-literal=AUTH_DB_URL='{{ vault_auth_db_url }}' \
-      --from-literal=ORDER_DB_URL='{{ vault_order_db_url }}' \
-      --from-literal=INVENTORY_DB_URL='{{ vault_inventory_db_url }}' \
-      --from-literal=WAREHOUSE_DB_URL='{{ vault_warehouse_db_url }}' \
-      --from-literal=DELIVERY_DB_URL='{{ vault_delivery_db_url }}' \
-      --from-literal=NOTIFICATION_DB_URL='{{ vault_notification_db_url }}' \
-      --from-literal=SMTP_EMAIL='{{ vault_smtp_email }}' \
-      --from-literal=SMTP_PASSWORD='{{ vault_smtp_password }}' \
+      --from-literal=JWT_SECRET="$VAULT_JWT_SECRET" \
+      --from-literal=INTERNAL_SERVICE_TOKEN="$VAULT_INTERNAL_SERVICE_TOKEN" \
+      --from-literal=AUTH_DB_URL="$VAULT_AUTH_DB_URL" \
+      --from-literal=ORDER_DB_URL="$VAULT_ORDER_DB_URL" \
+      --from-literal=INVENTORY_DB_URL="$VAULT_INVENTORY_DB_URL" \
+      --from-literal=WAREHOUSE_DB_URL="$VAULT_WAREHOUSE_DB_URL" \
+      --from-literal=DELIVERY_DB_URL="$VAULT_DELIVERY_DB_URL" \
+      --from-literal=NOTIFICATION_DB_URL="$VAULT_NOTIFICATION_DB_URL" \
+      --from-literal=SMTP_EMAIL="$VAULT_SMTP_EMAIL" \
+      --from-literal=SMTP_PASSWORD="$VAULT_SMTP_PASSWORD" \
       --dry-run=client -o yaml | kubectl apply -f -
+  environment:
+    VAULT_JWT_SECRET: "{{ vault_jwt_secret }}"
+    VAULT_INTERNAL_SERVICE_TOKEN: "{{ vault_internal_service_token }}"
+    VAULT_AUTH_DB_URL: "{{ vault_auth_db_url }}"
+    VAULT_ORDER_DB_URL: "{{ vault_order_db_url }}"
+    VAULT_INVENTORY_DB_URL: "{{ vault_inventory_db_url }}"
+    VAULT_WAREHOUSE_DB_URL: "{{ vault_warehouse_db_url }}"
+    VAULT_DELIVERY_DB_URL: "{{ vault_delivery_db_url }}"
+    VAULT_NOTIFICATION_DB_URL: "{{ vault_notification_db_url }}"
+    VAULT_SMTP_EMAIL: "{{ vault_smtp_email }}"
+    VAULT_SMTP_PASSWORD: "{{ vault_smtp_password }}"
   changed_when: true
   no_log: true
 
