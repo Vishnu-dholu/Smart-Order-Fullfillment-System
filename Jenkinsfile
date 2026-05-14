@@ -64,7 +64,7 @@ GIT_COMMIT=${env.GIT_COMMIT}
                     steps {
                         sh """
                           set -e
-                          docker build \
+                          docker build --network=host \
                             --build-arg BUILDKIT_INLINE_CACHE=1 \
                             --build-arg VITE_API_GATEWAY_URL="" \
                             -t ${env.REGISTRY}/frontend:${env.IMAGE_TAG} \
@@ -74,17 +74,17 @@ GIT_COMMIT=${env.GIT_COMMIT}
                 }
                 stage('03.2 - Build Spring Services') {
                     steps {
-                        sh "docker build --build-arg BUILDKIT_INLINE_CACHE=1 -t ${env.REGISTRY}/api-gateway:${env.IMAGE_TAG} -f services/spring/api-gateway/Dockerfile services/spring/api-gateway"
-                        sh "docker build --build-arg BUILDKIT_INLINE_CACHE=1 -t ${env.REGISTRY}/auth-service:${env.IMAGE_TAG} -f services/spring/auth-service/Dockerfile services/spring/auth-service"
-                        sh "docker build --build-arg BUILDKIT_INLINE_CACHE=1 -t ${env.REGISTRY}/inventory-service:${env.IMAGE_TAG} -f services/spring/inventory-service/Dockerfile services/spring/inventory-service"
-                        sh "docker build --build-arg BUILDKIT_INLINE_CACHE=1 -t ${env.REGISTRY}/order-service:${env.IMAGE_TAG} -f services/spring/order-service/Dockerfile services/spring/order-service"
+                        sh "docker build --network=host --build-arg BUILDKIT_INLINE_CACHE=1 -t ${env.REGISTRY}/api-gateway:${env.IMAGE_TAG} -f services/spring/api-gateway/Dockerfile services/spring/api-gateway"
+                        sh "docker build --network=host --build-arg BUILDKIT_INLINE_CACHE=1 -t ${env.REGISTRY}/auth-service:${env.IMAGE_TAG} -f services/spring/auth-service/Dockerfile services/spring/auth-service"
+                        sh "docker build --network=host --build-arg BUILDKIT_INLINE_CACHE=1 -t ${env.REGISTRY}/inventory-service:${env.IMAGE_TAG} -f services/spring/inventory-service/Dockerfile services/spring/inventory-service"
+                        sh "docker build --network=host --build-arg BUILDKIT_INLINE_CACHE=1 -t ${env.REGISTRY}/order-service:${env.IMAGE_TAG} -f services/spring/order-service/Dockerfile services/spring/order-service"
                     }
                 }
                 stage('03.3 - Build Go Services') {
                     steps {
-                        sh "docker build --build-arg BUILDKIT_INLINE_CACHE=1 -t ${env.REGISTRY}/warehouse-service:${env.IMAGE_TAG} -f services/go/warehouse-service/Dockerfile services/go/warehouse-service"
-                        sh "docker build --build-arg BUILDKIT_INLINE_CACHE=1 -t ${env.REGISTRY}/delivery-service:${env.IMAGE_TAG} -f services/go/delivery-service/Dockerfile services/go/delivery-service"
-                        sh "docker build --build-arg BUILDKIT_INLINE_CACHE=1 -t ${env.REGISTRY}/notification-service:${env.IMAGE_TAG} -f services/go/notification-service/Dockerfile services/go/notification-service"
+                        sh "docker build --network=host --build-arg BUILDKIT_INLINE_CACHE=1 -t ${env.REGISTRY}/warehouse-service:${env.IMAGE_TAG} -f services/go/warehouse-service/Dockerfile services/go/warehouse-service"
+                        sh "docker build --network=host --build-arg BUILDKIT_INLINE_CACHE=1 -t ${env.REGISTRY}/delivery-service:${env.IMAGE_TAG} -f services/go/delivery-service/Dockerfile services/go/delivery-service"
+                        sh "docker build --network=host --build-arg BUILDKIT_INLINE_CACHE=1 -t ${env.REGISTRY}/notification-service:${env.IMAGE_TAG} -f services/go/notification-service/Dockerfile services/go/notification-service"
                     }
                 }
             }
@@ -147,9 +147,13 @@ GIT_COMMIT=${env.GIT_COMMIT}
                 expression { !params.ROLLBACK_ONLY }
             }
             steps {
-                script {
-                    allServices.each { svc ->
-                        sh "minikube image load ${env.REGISTRY}/${svc}:${env.IMAGE_TAG} || true"
+                withCredentials([sshUserPrivateKey(credentialsId: 'ANSIBLE_SSH_KEY', keyFileVariable: 'ANSIBLE_KEY', usernameVariable: 'ANSIBLE_USER')]) {
+                    script {
+                        allServices.each { svc ->
+                            sh """
+                              ssh -o StrictHostKeyChecking=no -i "\$ANSIBLE_KEY" "\$ANSIBLE_USER"@127.0.0.1 "minikube image load ${env.REGISTRY}/${svc}:${env.IMAGE_TAG}" || true
+                            """
+                        }
                     }
                 }
             }
