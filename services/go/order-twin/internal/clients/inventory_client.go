@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/smartfulfillment/order-twin/internal/config"
@@ -20,8 +19,8 @@ func GetProductById(productID uuid.UUID) (*ProductDTO, error) {
 	cfg := config.LoadConfig()
 	url := fmt.Sprintf("%s/products/%s", cfg.InventoryServiceURL, productID)
 
-	client := &http.Client{Timeout: 5 * time.Second}
-	resp, err := client.Get(url)
+	// Use the package-level sharedClient — no new TCP handshake per call.
+	resp, err := sharedClient.Get(url)
 	if err != nil {
 		return nil, err
 	}
