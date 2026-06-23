@@ -1,0 +1,7 @@
+apiVersion: 1
+providers:
+  - name: 'SSP Benchmarks'
+    folder: 'SSP'
+    type: file
+    options:
+      path: /etc/grafana/provisioning/dashboards

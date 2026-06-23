@@ -6,17 +6,33 @@ import http from 'k6/http';
 // RIGOROUS 35-MINUTE STAGED LOAD RAMP (ACTIVE)
 // ==============================================================================
 export const options = {
-    stages: [
-        { duration: '5m', target: 10 },   // Warm-up: Allow JIT compilation and pool initialization
-        { duration: '5m', target: 50 },   // Ramp 1: Light load
-        { duration: '5m', target: 100 },  // Ramp 2: Medium load
-        { duration: '5m', target: 200 },  // Ramp 3: Heavy load
-        { duration: '10m', target: 200 }, // Sustain: Observe steady-state memory and GC behaviour
-        { duration: '5m', target: 0 },    // Cool-down: Allow connections to drain gracefully
-    ],
+    scenarios: {
+        warmup: {
+            executor: 'ramping-vus',
+            startVUs: 0,
+            stages: [
+                { duration: '5m', target: 10 },   // Warm-up: Allow JIT compilation and pool initialization
+            ],
+            gracefulRampDown: '10s',
+            tags: { phase: 'warmup' },
+        },
+        measurement: {
+            executor: 'ramping-vus',
+            startVUs: 10,
+            stages: [
+                { duration: '5m', target: 50 },   // Ramp 1: Light load
+                { duration: '5m', target: 100 },  // Ramp 2: Medium load
+                { duration: '5m', target: 200 },  // Ramp 3: Heavy load
+                { duration: '10m', target: 200 }, // Sustain: Observe steady-state memory and GC behaviour
+                { duration: '5m', target: 0 },    // Cool-down: Allow connections to drain gracefully
+            ],
+            startTime: '5m',
+            tags: { phase: 'measurement' },
+        },
+    },
     thresholds: {
-        http_req_duration: ['p(99)<500'], // 99% of requests must complete below 500ms
-        http_req_failed: ['rate<0.01'],   // Error rate must be strictly less than 1%
+        'http_req_duration{phase:measurement}': ['p(99)<500'], // 99% of requests must complete below 500ms
+        'http_req_failed{phase:measurement}': ['rate<0.01'],   // Error rate must be strictly less than 1%
     },
 };
 

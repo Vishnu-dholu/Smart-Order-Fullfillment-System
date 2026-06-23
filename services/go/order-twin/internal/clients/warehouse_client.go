@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/smartfulfillment/order-twin/internal/config"
@@ -26,8 +25,7 @@ func GetStockByProduct(productID uuid.UUID) ([]StockDTO, error) {
 	cfg := config.LoadConfig()
 	url := fmt.Sprintf("%s/stock/%s", cfg.WarehouseServiceURL, productID.String())
 
-	client := &http.Client{Timeout: 30 * time.Second}
-	resp, err := client.Get(url)
+	resp, err := SharedWarehouseClient.Get(url)
 	if err != nil {
 		return nil, err
 	}
@@ -61,8 +59,7 @@ func UpdateStock(warehouseID uuid.UUID, payload map[string]interface{}) error {
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	client := &http.Client{Timeout: 30 * time.Second}
-	resp, err := client.Do(req)
+	resp, err := SharedWarehouseClient.Do(req)
 	if err != nil {
 		return err
 	}

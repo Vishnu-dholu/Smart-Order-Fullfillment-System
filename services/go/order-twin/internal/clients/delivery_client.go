@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/smartfulfillment/order-twin/internal/config"
 )
@@ -26,8 +25,7 @@ func CreateDelivery(requestPayload map[string]string) (map[string]interface{}, e
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	client := &http.Client{Timeout: 5 * time.Second}
-	resp, err := client.Do(req)
+	resp, err := SharedClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
