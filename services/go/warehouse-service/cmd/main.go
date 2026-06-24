@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
+	ginprometheus "github.com/zsais/go-gin-prometheus"
 
 	"github.com/smartfulfillment/warehouse-service/internal/config"
 	"github.com/smartfulfillment/warehouse-service/internal/database"
@@ -27,7 +27,9 @@ func main() {
 	// Initialize Router
 	r := gin.Default()
 
-	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
+	// HTTP Latency Histogram Middleware
+	p := ginprometheus.NewPrometheus("gin")
+	p.Use(r)
 
 	// --- CORS MIDDLEWARE ---
 	corsConfig := cors.DefaultConfig()

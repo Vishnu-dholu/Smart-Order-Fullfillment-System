@@ -4,6 +4,8 @@ import (
 	"log"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -29,6 +31,11 @@ func Connect(connectionString string) {
 	sqlDB.SetMaxOpenConns(50)
 	sqlDB.SetMaxIdleConns(10)
 	sqlDB.SetConnMaxLifetime(30 * time.Minute)
+
+	// Expose sql.DB connection pool stats to Prometheus.
+	if err := prometheus.Register(collectors.NewDBStatsCollector(sqlDB, "warehouse_db")); err != nil {
+		log.Printf("Warning: could not register DBStats collector: %v", err)
+	}
 
 	log.Println("Connected to Neon warehouse_db successfully with tuned connection pool")
 }

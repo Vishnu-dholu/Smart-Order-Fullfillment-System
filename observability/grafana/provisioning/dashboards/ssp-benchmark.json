@@ -31,8 +31,13 @@
       "targets": [
         {
           "expr": "process_resident_memory_bytes",
-          "legendFormat": "{{instance}}",
+          "legendFormat": "{{instance}} (Go RSS)",
           "refId": "A"
+        },
+        {
+          "expr": "sum(jvm_memory_used_bytes) by (instance)",
+          "legendFormat": "{{instance}} (JVM Total Memory Used)",
+          "refId": "B"
         }
       ],
       "fieldConfig": {
@@ -176,7 +181,7 @@
     {
       "id": 6,
       "type": "timeseries",
-      "title": "JVM Garbage Collection Pauses",
+      "title": "Garbage Collection Pauses (Java vs Go)",
       "gridPos": {
         "h": 8,
         "w": 12,
@@ -186,8 +191,18 @@
       "targets": [
         {
           "expr": "rate(jvm_gc_pause_seconds_sum[1m])",
-          "legendFormat": "{{instance}}",
+          "legendFormat": "{{instance}} (JVM GC pause rate)",
           "refId": "A"
+        },
+        {
+          "expr": "rate(go_gc_duration_seconds_sum[1m])",
+          "legendFormat": "{{instance}} (Go GC pause rate)",
+          "refId": "B"
+        },
+        {
+          "expr": "rate(go_gc_duration_seconds_count[1m])",
+          "legendFormat": "{{instance}} (Go GC cycles/sec)",
+          "refId": "C"
         }
       ],
       "fieldConfig": {
@@ -197,13 +212,22 @@
             "lineInterpolation": "smooth"
           },
           "unit": "s"
-        }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Go GC cycles/sec" },
+            "properties": [
+              { "id": "unit", "value": "short" },
+              { "id": "custom.axisPlacement", "value": "right" }
+            ]
+          }
+        ]
       }
     },
     {
       "id": 7,
       "type": "timeseries",
-      "title": "The Database Bottleneck (Active vs. Pending)",
+      "title": "DB Connection Pool (HikariCP vs Go sql.DB)",
       "gridPos": {
         "h": 8,
         "w": 12,
@@ -213,13 +237,28 @@
       "targets": [
         {
           "expr": "hikaricp_connections_active",
-          "legendFormat": "{{instance}} (Active)",
+          "legendFormat": "{{instance}} (HikariCP Active)",
           "refId": "A"
         },
         {
           "expr": "hikaricp_connections_pending",
-          "legendFormat": "{{instance}} (Pending)",
+          "legendFormat": "{{instance}} (HikariCP Pending)",
           "refId": "B"
+        },
+        {
+          "expr": "go_sql_in_use_connections",
+          "legendFormat": "{{instance}} {{db_name}} (Go In-Use)",
+          "refId": "C"
+        },
+        {
+          "expr": "go_sql_open_connections",
+          "legendFormat": "{{instance}} {{db_name}} (Go Open)",
+          "refId": "D"
+        },
+        {
+          "expr": "go_sql_idle_connections",
+          "legendFormat": "{{instance}} {{db_name}} (Go Idle)",
+          "refId": "E"
         }
       ],
       "fieldConfig": {
@@ -281,7 +320,7 @@
           "refId": "A"
         },
         {
-          "expr": "sum(rate(gin_request_duration_seconds_count{status=~\"5.*\"}[1m])) by (instance)",
+          "expr": "sum(rate(gin_request_duration_seconds_count{code=~\"5.*\"}[1m])) by (instance)",
           "legendFormat": "{{instance}} (Go Errors)",
           "refId": "B"
         }

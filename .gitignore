@@ -18,3 +18,7 @@ bin/
 
 # Logs
 *.log
+
+Project_Interview_Notes
+load-tests/results
+
