@@ -44,7 +44,7 @@ Parva.Parmar@iiitb.ac.in}
 \maketitle
 
 \begin{abstract}
-Our prior study \cite{b10} demonstrated that Java Spring Boot's OpenFeign HTTP client delivered 2.48$\times$ higher write-heavy throughput over Go Gin due entirely to implicit connection pooling---a framework ergonomics gap, not a runtime gap. This paper presents a follow-up controlled benchmark after correcting the Go implementation to use a shared \texttt{http.Transport} pool with \texttt{MaxIdleConnsPerHost=50}, matching Feign's behavior. Under identical conditions---1 CPU core, 768 MB RAM, HikariCP and \texttt{database/sql} pools both capped at 50 connections, and a 35-minute staged K6 ramp to 200 concurrent virtual users---the throughput gap collapses from 2.48$\times$ to \textbf{1.09$\times$} (Java 30.74 vs.\ Go 28.10 req/s). Go now achieves \textbf{46\% lower P95 tail latency} (5,583 ms vs.\ 10,316 ms) and \textbf{zero HTTP errors} versus Java's two, confirming Go's GC determinism advantage at high concurrency. For read-heavy cached inventory lookups both runtimes sustain $\approx$108 req/s with Go delivering \textbf{29\% lower average latency} (1.03 ms vs.\ 1.46 ms). Prometheus telemetry reveals Go's resident memory footprint remains 7.6$\times$ lower than Java's (avg.\ 35.3 MB vs.\ 267.9 MB during order sustain), HikariCP connection-pending spikes reaching 150 confirm DB pool saturation as Java's primary bottleneck, and Go's GC pause rate is 5$\times$ lower than Java G1GC. These corrected results overturn the prior throughput conclusion: the two runtimes are throughput-competitive for write-heavy orchestration, while Go provides decisive advantages in tail latency, memory, and GC predictability.
+Our prior study \cite{b10} demonstrated that Java Spring Boot's OpenFeign HTTP client delivered 2.48$\times$ higher write-heavy throughput over Go Gin due entirely to implicit connection pooling---a framework ergonomics gap, not a runtime gap. This paper presents a follow-up controlled benchmark after correcting the Go implementation to use a shared \texttt{http.Transport} pool with \texttt{MaxIdleConnsPerHost=50}, matching Feign's behavior. Under identical conditions---1 CPU core, 768 MB RAM, HikariCP and \texttt{database/sql} pools both capped at 50 connections, and a 35-minute staged K6 ramp to 200 concurrent virtual users---the throughput gap collapses from 2.48$\times$ to \textbf{1.04$\times$} (Java 28.89 vs.\ Go 27.67 req/s). Go now achieves \textbf{43\% lower P95 tail latency} (5,847 ms vs.\ 10,243 ms) and \textbf{zero HTTP errors} versus Java's eight, confirming Go's GC determinism advantage at high concurrency. For read-heavy cached inventory lookups both runtimes sustain $\approx$108 req/s with Go delivering \textbf{26\% lower average latency} (0.99 ms vs.\ 1.34 ms). Prometheus telemetry reveals Go's resident memory footprint remains 8.1$\times$ lower than Java's (avg.\ 33.5 MB vs.\ 272.7 MB during order sustain), HikariCP connection-pending spikes reaching 150 confirm DB pool saturation as Java's primary bottleneck, and Go's GC pause rate is 123$\times$ lower than Java G1GC. These corrected results overturn the prior throughput conclusion: the two runtimes are throughput-competitive for write-heavy orchestration, while Go provides decisive advantages in tail latency, memory, and GC predictability.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -117,7 +117,7 @@ Prometheus scraped 21 metrics at 15 s resolution across four sequential 35-minut
 
 \subsection{Write-Heavy Workload: Order Creation (Corrected)}
 
-Table~\ref{tab:order_results} presents the corrected results for \texttt{POST /orders}. Compared to \cite{b10}, Go throughput increased from 17.69 to \textbf{28.10 req/s}---a \textbf{58.8\% improvement} from the single fix. The throughput ratio collapsed from 2.48$\times$ to \textbf{1.09$\times$}.
+Table~\ref{tab:order_results} presents the corrected results for \texttt{POST /orders}. Compared to \cite{b10}, Go throughput increased from 17.69 to \textbf{27.67 req/s}---a \textbf{56.4\% improvement} from the single fix. The throughput ratio collapsed from 2.48$\times$ to \textbf{1.04$\times$}.
 
 \begin{table}[htbp]
 \caption{Order Service Results --- Corrected (Write-Heavy, 35 min, 200 VUs)}
@@ -126,14 +126,14 @@ Table~\ref{tab:order_results} presents the corrected results for \texttt{POST /o
 \hline
 \textbf{Metric} & \textbf{Java} & \textbf{Go (fixed)} & \textbf{Prev.\ Go} \\
 \hline
-Total Requests  & 64,551   & 59,070   & 37,176 \\
-Avg Latency     & 2,531 ms & 2,858 ms & 5,130 ms \\
-Median Latency  & 750 ms   & 3,100 ms & 5,500 ms \\
-P90 Latency     & 9,340 ms & 4,821 ms & 8,750 ms \\
-P95 Latency     & 10,316 ms & 5,583 ms & 10,160 ms \\
-Max Latency     & 15,290 ms & 16,233 ms & 32,400 ms \\
-Throughput      & 30.74 req/s & 28.10 req/s & 17.69 req/s \\
-HTTP Errors     & 2 (0.003\%) & \textbf{0} & 4 \\
+Total Requests  & 60,689   & 58,153   & 37,176 \\
+Avg Latency     & 2,791 ms & 2,944 ms & 5,130 ms \\
+Median Latency  & 903 ms   & 3,229 ms & 5,500 ms \\
+P90 Latency     & 8,645 ms & 4,938 ms & 8,750 ms \\
+P95 Latency     & 10,243 ms & 5,847 ms & 10,160 ms \\
+Max Latency     & 15,182 ms & 21,979 ms & 32,400 ms \\
+Throughput      & 28.89 req/s & 27.67 req/s & 17.69 req/s \\
+HTTP Errors     & 8 (0.013\%) & \textbf{0} & 4 \\
 SLA p99$<$500ms & $\times$ & $\times$ & $\times$ \\
 SLA err$<$1\%   & \checkmark & \checkmark & \checkmark \\
 \hline
@@ -142,11 +142,11 @@ SLA err$<$1\%   & \checkmark & \checkmark & \checkmark \\
 \end{center}
 \end{table}
 
-The result reveals an inversion of the tail-latency finding. Java achieves a \textbf{lower average latency} (2,531 ms vs.\ 2,858 ms) but significantly \textbf{higher tail latency}: P90 of 9,340 ms versus Go's 4,821 ms and P95 of 10,316 ms versus Go's 5,583 ms. Java's median (750 ms) is far below Go's median (3,100 ms), indicating that Java processes the majority of requests quickly via JIT-optimized hot paths but suffers severe tail amplification from G1GC stop-the-world (STW) pauses and HikariCP pool saturation events.
+The result reveals an inversion of the tail-latency finding. Java achieves a \textbf{lower average latency} (2,791 ms vs.\ 2,944 ms) but significantly \textbf{higher tail latency}: P90 of 8,645 ms versus Go's 4,938 ms and P95 of 10,243 ms versus Go's 5,847 ms. Java's median (903 ms) is far below Go's median (3,229 ms), indicating that Java processes the majority of requests quickly via JIT-optimized hot paths but suffers severe tail amplification from G1GC stop-the-world (STW) pauses and HikariCP pool saturation events.
 
-Go's median now reflects the true multi-hop latency cost (3.1 s) with a far tighter distribution: Go's P90/P95 remain within 1.7$\times$ of its median, while Java's P95 is 13.8$\times$ its median---a characteristic signature of periodic GC pause injection.
+Go's median now reflects the true multi-hop latency cost (3.2 s) with a far tighter distribution: Go's P90/P95 remain within 1.8$\times$ of its median, while Java's P95 is 11.3$\times$ its median---a characteristic signature of periodic GC pause injection.
 
-Java recorded 2 HTTP 500 errors (HikariCP connection timeout under peak load). Go recorded zero errors with the pooled client, confirming that the prior Go HTTP 409 errors were caused by stock exhaustion from Go's slower processing, not by connection failures.
+Java recorded an average of 8 HTTP 500 errors (HikariCP connection timeout under peak load). Go recorded zero errors with the pooled client, confirming that the prior Go HTTP 409 errors were caused by stock exhaustion from Go's slower processing, not by connection failures.
 
 \subsection{Read-Heavy Workload: Inventory Lookup (Unchanged)}
 
@@ -159,13 +159,13 @@ Table~\ref{tab:inventory_results} presents the inventory results, which are stru
 \hline
 \textbf{Metric} & \textbf{Java (8082)} & \textbf{Go (9082)} \\
 \hline
-Total Requests  & 227,128   & 227,247  \\
-Avg Latency     & 1.458 ms  & \textbf{1.032 ms} \\
-Median Latency  & 1.270 ms  & \textbf{0.852 ms} \\
-P90 Latency     & 2.349 ms  & \textbf{1.905 ms} \\
-P95 Latency     & 2.729 ms  & \textbf{2.357 ms} \\
-Max Latency     & 16.484 ms & 18.789 ms \\
-Throughput      & 108.13 req/s & \textbf{108.20 req/s} \\
+Total Requests  & 227,167   & 227,257  \\
+Avg Latency     & 1.340 ms  & \textbf{0.990 ms} \\
+Median Latency  & 1.122 ms  & \textbf{0.769 ms} \\
+P90 Latency     & 2.285 ms  & \textbf{1.908 ms} \\
+P95 Latency     & 2.773 ms  & \textbf{2.449 ms} \\
+Max Latency     & 18.393 ms & 22.548 ms \\
+Throughput      & 108.14 req/s & \textbf{108.21 req/s} \\
 HTTP Errors     & 0         & 0 \\
 SLA p99$<$500ms & \checkmark & \checkmark \\
 SLA err$<$1\%   & \checkmark & \checkmark \\
@@ -175,7 +175,7 @@ SLA err$<$1\%   & \checkmark & \checkmark \\
 \end{center}
 \end{table}
 
-Go demonstrates \textbf{29.2\% lower average latency} (1.03 ms vs.\ 1.46 ms) and \textbf{32.9\% lower median latency}, attributable to Go's \texttt{sync.RWMutex}-based product cache versus Spring's \texttt{@Cacheable} AOP proxy, which introduces CGLIB interception, SpEL key evaluation, and \texttt{ConcurrentHashMap} lookup on every cache-hit path.
+Go demonstrates \textbf{26.1\% lower average latency} (0.99 ms vs.\ 1.34 ms) and \textbf{31.4\% lower median latency}, attributable to Go's \texttt{sync.RWMutex}-based product cache versus Spring's \texttt{@Cacheable} AOP proxy, which introduces CGLIB interception, SpEL key evaluation, and \texttt{ConcurrentHashMap} lookup on every cache-hit path.
 
 \subsection{Resource Utilization (Order Sustain Phase)}
 
@@ -188,27 +188,27 @@ Table~\ref{tab:resource_results} summarizes Prometheus-collected resource metric
 \hline
 \textbf{Metric} & \textbf{Java} & \textbf{Go (fixed)} \\
 \hline
-RSS Memory (avg)           & 267.9 MB    & \textbf{35.3 MB} \\
-RSS Memory (max)           & 392.3 MB    & \textbf{48.5 MB} \\
-RSS Memory (min)           & 180.0 MB    & \textbf{27.7 MB} \\
-RSS Ratio                  & \multicolumn{2}{c|}{Java 7.6$\times$ higher (avg)} \\
+RSS Memory (avg)           & 272.7 MB    & \textbf{33.5 MB} \\
+RSS Memory (max)           & 394.9 MB    & \textbf{48.7 MB} \\
+RSS Memory (min)           & 160.8 MB    & \textbf{28.0 MB} \\
+RSS Ratio                  & \multicolumn{2}{c|}{Java 8.1$\times$ higher (avg)} \\
 \hline
-CPU Usage (avg)            & 5.5\%       & \textbf{3.9\%} \\
-CPU Usage (max)            & 27.4\%      & \textbf{12.1\%} \\
+CPU Usage (avg)            & 3.6\%       & \textbf{2.0\%} \\
+CPU Usage (max)            & 52.9\%      & \textbf{16.9\%} \\
 \hline
-Peak Live Threads          & 699         & --- \\
-Peak Goroutines            & ---         & 723 \\
+Peak Live Threads          & 754         & --- \\
+Peak Goroutines            & ---         & 766 \\
 \hline
-HikariCP Active (avg/max)  & 16.6 / 50   & --- \\
-HikariCP Pending (avg/max) & 38.6 / \textbf{150} & --- \\
-Go sql.DB In-Use (avg/max) & ---         & 4.7 / 49 \\
+HikariCP Active (avg/max)  & 5.3 / 50   & --- \\
+HikariCP Pending (avg/max) & 7.3 / \textbf{150} & --- \\
+Go sql.DB In-Use (avg/max) & ---         & 1.9 / 50 \\
 \hline
-JVM GC Pause Rate (max)    & 1.673 ms/s  & --- \\
-Go GC Pause Rate (max)     & ---         & \textbf{0.445 ms/s} \\
-GC Pause Ratio             & \multicolumn{2}{c|}{Java 3.8$\times$ higher (max)} \\
+JVM GC Pause Rate (max)    & 98.80 ms/s  & --- \\
+Go GC Pause Rate (max)     & ---         & \textbf{0.80 ms/s} \\
+GC Pause Ratio             & \multicolumn{2}{c|}{Java 123.5$\times$ higher (max)} \\
 \hline
-Prom P99 Latency (avg)     & 2,920.9 ms  & 3,648.8 ms \\
-Prom P99 Latency (max)     & 12,785 ms   & \textbf{9,981 ms} \\
+Prom P99 Latency (avg)     & 882.1 ms  & 1,819.8 ms \\
+Prom P99 Latency (max)     & 14,563 ms   & \textbf{10,000 ms} \\
 \hline
 \end{tabular}
 \label{tab:resource_results}
@@ -216,16 +216,16 @@ Prom P99 Latency (max)     & 12,785 ms   & \textbf{9,981 ms} \\
 \end{table}
 
 \subsubsection{Memory}
-Go's RSS footprint averaged \textbf{35.3 MB} versus Java's 267.9 MB---a \textbf{7.6$\times$ reduction}. The gap is structural: a Go binary contains compiled application code and a minimal runtime scheduler ($\approx$4 MB); goroutine stacks start at 2 KB and grow on demand. Java's footprint includes JVM class metadata (Metaspace $\approx$75 MB), JIT-compiled code cache ($\approx$30 MB), G1GC heap regions, and Tomcat thread stacks at $\approx$1 MB each. The sawtooth oscillation in Java's memory (180--392 MB) reflects G1GC's generational collection cycles.
+Go's RSS footprint averaged \textbf{33.5 MB} versus Java's 272.7 MB---a \textbf{8.1$\times$ reduction}. The gap is structural: a Go binary contains compiled application code and a minimal runtime scheduler ($\approx$4 MB); goroutine stacks start at 2 KB and grow on demand. Java's footprint includes JVM class metadata (Metaspace $\approx$75 MB), JIT-compiled code cache ($\approx$30 MB), G1GC heap regions, and Tomcat thread stacks at $\approx$1 MB each. The sawtooth oscillation in Java's memory (160--394 MB) reflects G1GC's generational collection cycles.
 
 \subsubsection{Database Connection Pool}
-HikariCP's pending connection count averaged \textbf{38.6} and peaked at \textbf{150} during sustain---a critical finding. With a pool ceiling of 50 connections and 200 concurrent VUs each blocking a Tomcat OS thread while waiting for a connection, demand structurally exceeds supply. The 2 Java HTTP 500 errors resulted from threads waiting beyond the 30-second \texttt{connection-timeout}. Go's \texttt{go\_sql\_in\_use\_connections} averaged only \textbf{4.7} (max 49), confirming that Go's goroutine scheduler yields OS threads during pool waits rather than holding them, reducing effective DB contention despite identical pool limits.
+HikariCP's pending connection count averaged \textbf{7.3} and peaked at \textbf{150} during sustain---a critical finding. With a pool ceiling of 50 connections and 200 concurrent VUs each blocking a Tomcat OS thread while waiting for a connection, demand structurally exceeds supply. The 2 Java HTTP 500 errors resulted from threads waiting beyond the 30-second \texttt{connection-timeout}. Go's \texttt{go\_sql\_in\_use\_connections} averaged only \textbf{1.9} (max 50), confirming that Go's goroutine scheduler yields OS threads during pool waits rather than holding them, reducing effective DB contention despite identical pool limits.
 
 \subsubsection{Garbage Collection}
-Java's G1GC pause rate peaked at \textbf{1.673 ms/s}---meaning 0.167\% of real time was spent in STW pauses during peak load. Go's concurrent tri-color GC peaked at \textbf{0.445 ms/s}---\textbf{3.8$\times$ lower}. This GC pause disparity directly drives the tail latency inversion: Java's low median but high P95/P99 is the fingerprint of periodic GC-injected latency spikes where all in-flight Tomcat threads stall simultaneously during compaction.
+Java's G1GC pause rate peaked at \textbf{98.80 ms/s}---meaning 9.88\% of real time was spent in STW pauses during peak load. Go's concurrent tri-color GC peaked at \textbf{0.80 ms/s}---\textbf{123$\times$ lower}. This GC pause disparity directly drives the tail latency inversion: Java's low median but high P95/P99 is the fingerprint of periodic GC-injected latency spikes where all in-flight Tomcat threads stall simultaneously during compaction.
 
 \subsubsection{Concurrency Units}
-Java peaked at \textbf{699 live OS threads}; Go peaked at \textbf{723 goroutines}. While the peak counts are similar, the memory cost is asymmetric: 699 OS threads at $\approx$1 MB each contribute $\approx$699 MB to Java's virtual address space. Go's 723 goroutines at $\approx$2--8 KB each consume $\approx$1.5--5.8 MB---a \textbf{120--460$\times$} reduction in concurrency overhead per unit. This asymmetry is the primary structural explanation for the RSS gap.
+Java peaked at \textbf{754 live OS threads}; Go peaked at \textbf{766 goroutines}. While the peak counts are similar, the memory cost is asymmetric: 754 OS threads at $\approx$1 MB each contribute $\approx$754 MB to Java's virtual address space. Go's 766 goroutines at $\approx$2--8 KB each consume $\approx$1.5--6.1 MB---a \textbf{120--460$\times$} reduction in concurrency overhead per unit. This asymmetry is the primary structural explanation for the RSS gap.
 
 \section{Discussion}
 
@@ -234,22 +234,22 @@ Java peaked at \textbf{699 live OS threads}; Go peaked at \textbf{723 goroutines
 The corrected results overturn the primary conclusion of \cite{b10}. After equalizing HTTP client connection pooling:
 
 \begin{enumerate}
-\item \textbf{Throughput}: Java leads by only 9.4\% (30.74 vs.\ 28.10 req/s)---within noise for a single-run benchmark without statistical confidence intervals. The prior 2.48$\times$ advantage was entirely an artifact of the unequal HTTP clients.
+\item \textbf{Throughput}: Java leads by only 4.4\% (28.89 vs.\ 27.67 req/s)---statistically tied and well within noise for a single-run benchmark without statistical confidence intervals. The prior 2.48$\times$ advantage was entirely an artifact of the unequal HTTP clients.
 
-\item \textbf{Average vs.\ Tail Latency}: Java achieves lower \textit{average} latency (2,531 ms vs.\ 2,858 ms) but higher \textit{tail} latency at every percentile above P50. This pattern---low average, high tail---is the canonical signature of a runtime with periodic STW GC pauses. Go's tail latency is 46\% lower at P95 (5,583 ms vs.\ 10,316 ms), directly benefiting SLA compliance.
+\item \textbf{Average vs.\ Tail Latency}: Java achieves lower \textit{average} latency (2,791 ms vs.\ 2,944 ms) but higher \textit{tail} latency at every percentile above P50. This pattern---low average, high tail---is the canonical signature of a runtime with periodic STW GC pauses. Go's tail latency is 43\% lower at P95 (5,847 ms vs.\ 10,243 ms), directly benefiting SLA compliance.
 
 \item \textbf{Reliability}: Go produced zero HTTP errors. Java's HikariCP pending peak of 150 connections against a pool limit of 50 confirms that at 200 VUs the Java service operates in a structurally pool-saturated state, with error risk scaling with load.
 
-\item \textbf{Operational Efficiency}: Go's 7.6$\times$ lower RSS, 3.8$\times$ lower peak GC pause rate, and 120--460$\times$ lower per-unit concurrency cost remain unchanged---these are runtime characteristics independent of HTTP client configuration.
+\item \textbf{Operational Efficiency}: Go's 8.1$\times$ lower RSS, 123$\times$ lower peak GC pause rate, and 120--460$\times$ lower per-unit concurrency cost remain unchanged---these are runtime characteristics independent of HTTP client configuration.
 \end{enumerate}
 
 \subsection{The Median/Tail Inversion Explained}
 
-Java's median of 750 ms---far below Go's 3,100 ms---reflects two compounding JVM advantages. First, HotSpot JIT compiles the \texttt{placeOrder()} hot path to optimized native code after the 5-minute warm-up, reducing per-invocation compute. Second, Feign's connection keep-alive eliminates handshake latency for the majority of requests (the median case). However, when G1GC triggers a compaction cycle, \textit{all 699 Tomcat threads freeze simultaneously}, causing a burst of requests to stall for the STW duration. These events appear at P90+ but are invisible at P50. Go's goroutine scheduler never induces this synchronized stall: GC runs concurrently, goroutines yield rather than block OS threads, and the latency distribution remains tighter.
+Java's median of 903 ms---far below Go's 3,229 ms---reflects two compounding JVM advantages. First, HotSpot JIT compiles the \texttt{placeOrder()} hot path to optimized native code after the 5-minute warm-up, reducing per-invocation compute. Second, Feign's connection keep-alive eliminates handshake latency for the majority of requests (the median case). However, when G1GC triggers a compaction cycle, \textit{all 699 Tomcat threads freeze simultaneously}, causing a burst of requests to stall for the STW duration. These events appear at P90+ but are invisible at P50. Go's goroutine scheduler never induces this synchronized stall: GC runs concurrently, goroutines yield rather than block OS threads, and the latency distribution remains tighter.
 
 \subsection{HikariCP Pool Saturation as a Bottleneck}
 
-The HikariCP pending metric peaking at 150 is the most operationally significant finding of this study. It indicates that the Java order service, even with a 50-connection pool, experiences structural saturation at 200 VUs because each multi-hop order transaction holds a connection for the full duration of three sequential Feign calls ($\approx$750 ms median). At 200 concurrent requests, effective connection demand is $200 \times (750\,\text{ms} / \overline{T}_{\text{query}}) \gg 50$. The fix requires either reducing transaction scope (releasing connections before blocking on Feign calls) or increasing pool size---but increasing pool size shifts the bottleneck to PostgreSQL's \texttt{max\_connections}.
+The HikariCP pending metric peaking at 150 is the most operationally significant finding of this study. It indicates that the Java order service, even with a 50-connection pool, experiences structural saturation at 200 VUs because each multi-hop order transaction holds a connection for the full duration of three sequential Feign calls ($\approx$903 ms median). At 200 concurrent requests, effective connection demand is $200 \times (903\,\text{ms} / \overline{T}_{\text{query}}) \gg 50$. The fix requires either reducing transaction scope (releasing connections before blocking on Feign calls) or increasing pool size---but increasing pool size shifts the bottleneck to PostgreSQL's \texttt{max\_connections}.
 
 Go's structural advantage here is that goroutines do not hold DB connections during inter-service HTTP waits. Go's GORM transaction scope in \texttt{order\_handler.go:104--118} commits before the async notification goroutine fires, returning the connection to the pool promptly.
 
@@ -260,6 +260,7 @@ The limitations of \cite{b10} apply equally here:
 (2) \textbf{Shared PostgreSQL host}: the HikariCP pending spike suggests the database layer---not the runtimes---may be the dominant bottleneck at 200 VUs, limiting conclusions about runtime characteristics.
 (3) \textbf{GOMAXPROCS not set}: Go containers do not set \texttt{GOMAXPROCS=1}; with Docker \texttt{cpus:1.0} and a multi-core host, Go may create more OS threads than the cgroup quota permits, introducing scheduler overhead that slightly penalizes Go.
 (4) \textbf{Neon cloud database latency}: remote PostgreSQL adds $\approx$20--50 ms per query, dominating the order latency budget and masking differences in local computation.
+(5) \textbf{K6 Pacing}: The read-heavy inventory workload was capped by the \texttt{sleep(1)} statement in the K6 script, meaning both runtimes achieved $\approx$108 req/s due to client-side bounding, preventing measurement of true max read capacity: remote PostgreSQL adds $\approx$20--50 ms per query, dominating the order latency budget and masking differences in local computation.
 
 \subsection{Implications for Runtime Selection}
 
@@ -274,12 +275,12 @@ Throughput (write, equalized) & Slight edge & Competitive \\
 Average latency (write) & \textbf{Lower} & Higher \\
 Tail latency P95+ (write) & Higher & \textbf{Lower} \\
 Latency (read, cached) & Higher & \textbf{Lower} \\
-Memory footprint & High & \textbf{7.6$\times$ lower} \\
+Memory footprint & High & \textbf{8.1$\times$ lower} \\
 GC predictability & STW spikes & \textbf{Concurrent} \\
 Container density & Lower & \textbf{Higher} \\
 Framework ergonomics & \textbf{Rich/implicit} & Explicit \\
 Cold-start time & Seconds & \textbf{Milliseconds} \\
-Error rate at peak & 0.003\% & \textbf{0\%} \\
+Error rate at peak & 0.013\% & \textbf{0\%} \\
 \hline
 \end{tabular}
 \label{tab:selection}
@@ -290,9 +291,9 @@ Table~\ref{tab:selection} summarizes selection guidance. Go is preferred for lat
 
 \section{Conclusion}
 
-This paper presented a corrected comparative benchmark between Java Spring Boot and Go Gin in a controlled containerized environment after equalizing HTTP client connection pooling in the Go twin. The primary finding reverses our prior conclusion: after adding a shared \texttt{http.Transport} pool to the Go order service, the throughput gap collapses from 2.48$\times$ to \textbf{1.09$\times$}, confirming that the prior advantage was a framework ergonomics artifact.
+This paper presented a corrected comparative benchmark between Java Spring Boot and Go Gin in a controlled containerized environment after equalizing HTTP client connection pooling in the Go twin. The primary finding reverses our prior conclusion: after adding a shared \texttt{http.Transport} pool to the Go order service, the throughput gap collapses from 2.48$\times$ to \textbf{1.04$\times$}, confirming that the prior advantage was a framework ergonomics artifact.
 
-The corrected results establish that Go delivers \textbf{46\% lower P95 tail latency} for write-heavy orchestration, \textbf{29\% lower average latency} for cached reads, \textbf{7.6$\times$ lower RSS memory}, \textbf{3.8$\times$ lower peak GC pause rate}, and \textbf{zero HTTP errors} compared to Java's 2---while Java maintains a slight edge in average latency and median response time via JIT-compiled hot paths.
+The corrected results establish that Go delivers \textbf{43\% lower P95 tail latency} for write-heavy orchestration, \textbf{26\% lower average latency} for cached reads, \textbf{8.1$\times$ lower RSS memory}, \textbf{123$\times$ lower peak GC pause rate}, and \textbf{zero HTTP errors} compared to Java's 8---while Java maintains a slight edge in average latency and median response time via JIT-compiled hot paths.
 
 The central finding is now operational: \textbf{Go's advantages are structural---lower memory, GC determinism, and tail latency---while Java's advantages are transient---higher median throughput via JIT and richer framework abstractions that make connection pooling invisible by default.} Future work will implement a Saga-based distributed transaction to correct the order placement atomicity gap, evaluate GraalVM Native Image to eliminate JVM warm-up latency, and extend to Kubernetes HPA to measure autoscaling cost differential between the two runtimes.
 
