@@ -1,0 +1,264 @@
+{
+  "export_timestamp_utc": "2026-06-24T11:07:02Z",
+  "prometheus_url": "http://localhost:9090",
+  "step": "15s",
+  "total_data_points": 38908,
+  "metrics_exported": [
+    {
+      "key": "rss_memory_go_bytes",
+      "panel_id": 1,
+      "ref_id": "A",
+      "panel_title": "RSS Memory Footprint"
+    },
+    {
+      "key": "jvm_total_memory_used_bytes",
+      "panel_id": 1,
+      "ref_id": "B",
+      "panel_title": "RSS Memory Footprint"
+    },
+    {
+      "key": "cpu_usage_spring",
+      "panel_id": 2,
+      "ref_id": "A",
+      "panel_title": "CPU Usage Rate"
+    },
+    {
+      "key": "cpu_usage_go",
+      "panel_id": 2,
+      "ref_id": "B",
+      "panel_title": "CPU Usage Rate"
+    },
+    {
+      "key": "p99_latency_spring_seconds",
+      "panel_id": 3,
+      "ref_id": "A",
+      "panel_title": "P99 HTTP Latency Panel (Java vs Go)"
+    },
+    {
+      "key": "p99_latency_go_seconds",
+      "panel_id": 3,
+      "ref_id": "B",
+      "panel_title": "P99 HTTP Latency Panel (Java vs Go)"
+    },
+    {
+      "key": "throughput_spring_rps",
+      "panel_id": 4,
+      "ref_id": "A",
+      "panel_title": "HTTP Throughput"
+    },
+    {
+      "key": "throughput_go_rps",
+      "panel_id": 4,
+      "ref_id": "B",
+      "panel_title": "HTTP Throughput"
+    },
+    {
+      "key": "heap_memory_jvm_bytes",
+      "panel_id": 5,
+      "ref_id": "A",
+      "panel_title": "The Resource Footprint (Memory Churn)"
+    },
+    {
+      "key": "heap_memory_go_bytes",
+      "panel_id": 5,
+      "ref_id": "B",
+      "panel_title": "The Resource Footprint (Memory Churn)"
+    },
+    {
+      "key": "gc_pause_rate_jvm_seconds",
+      "panel_id": 6,
+      "ref_id": "A",
+      "panel_title": "Garbage Collection Pauses (Java vs Go)"
+    },
+    {
+      "key": "gc_pause_rate_go_seconds",
+      "panel_id": 6,
+      "ref_id": "B",
+      "panel_title": "Garbage Collection Pauses (Java vs Go)"
+    },
+    {
+      "key": "gc_cycles_go_per_second",
+      "panel_id": 6,
+      "ref_id": "C",
+      "panel_title": "Garbage Collection Pauses (Java vs Go)"
+    },
+    {
+      "key": "db_connections_active",
+      "panel_id": 7,
+      "ref_id": "A",
+      "panel_title": "DB Connection Pool (HikariCP vs Go sql.DB)"
+    },
+    {
+      "key": "db_connections_pending",
+      "panel_id": 7,
+      "ref_id": "B",
+      "panel_title": "DB Connection Pool (HikariCP vs Go sql.DB)"
+    },
+    {
+      "key": "go_sql_in_use_connections",
+      "panel_id": 7,
+      "ref_id": "C",
+      "panel_title": "DB Connection Pool (HikariCP vs Go sql.DB)"
+    },
+    {
+      "key": "go_sql_open_connections",
+      "panel_id": 7,
+      "ref_id": "D",
+      "panel_title": "DB Connection Pool (HikariCP vs Go sql.DB)"
+    },
+    {
+      "key": "go_sql_idle_connections",
+      "panel_id": 7,
+      "ref_id": "E",
+      "panel_title": "DB Connection Pool (HikariCP vs Go sql.DB)"
+    },
+    {
+      "key": "jvm_threads_live",
+      "panel_id": 8,
+      "ref_id": "A",
+      "panel_title": "The Concurrency Model (Threads vs. Goroutines)"
+    },
+    {
+      "key": "go_goroutines",
+      "panel_id": 8,
+      "ref_id": "B",
+      "panel_title": "The Concurrency Model (Threads vs. Goroutines)"
+    },
+    {
+      "key": "error_rate_spring_rps",
+      "panel_id": 9,
+      "ref_id": "A",
+      "panel_title": "HTTP Error Rate"
+    },
+    {
+      "key": "error_rate_go_rps",
+      "panel_id": 9,
+      "ref_id": "B",
+      "panel_title": "HTTP Error Rate"
+    }
+  ],
+  "segments": [
+    {
+      "label": "go_order",
+      "service_type": "go",
+      "benchmark_type": "order",
+      "start_utc": "2026-06-24T08:31:32Z",
+      "end_utc": "2026-06-24T09:06:34Z",
+      "duration_minutes": 35.0
+    },
+    {
+      "label": "java_order",
+      "service_type": "java",
+      "benchmark_type": "order",
+      "start_utc": "2026-06-24T09:11:40Z",
+      "end_utc": "2026-06-24T09:46:42Z",
+      "duration_minutes": 35.0
+    },
+    {
+      "label": "go_inventory",
+      "service_type": "go",
+      "benchmark_type": "inventory",
+      "start_utc": "2026-06-24T09:51:50Z",
+      "end_utc": "2026-06-24T10:26:51Z",
+      "duration_minutes": 35.0
+    },
+    {
+      "label": "java_inventory",
+      "service_type": "java",
+      "benchmark_type": "inventory",
+      "start_utc": "2026-06-24T10:31:59Z",
+      "end_utc": "2026-06-24T11:07:00Z",
+      "duration_minutes": 35.0
+    }
+  ],
+  "load_phases_defined": [
+    {
+      "phase": "warmup",
+      "start_offset_s": 0,
+      "end_offset_s": 300
+    },
+    {
+      "phase": "ramp_1",
+      "start_offset_s": 300,
+      "end_offset_s": 600
+    },
+    {
+      "phase": "ramp_2",
+      "start_offset_s": 600,
+      "end_offset_s": 900
+    },
+    {
+      "phase": "ramp_3",
+      "start_offset_s": 900,
+      "end_offset_s": 1200
+    },
+    {
+      "phase": "sustain",
+      "start_offset_s": 1200,
+      "end_offset_s": 1800
+    },
+    {
+      "phase": "cooldown",
+      "start_offset_s": 1800,
+      "end_offset_s": 2100
+    }
+  ],
+  "phase_data_point_counts": {
+    "warmup": 5520,
+    "ramp_1": 5520,
+    "ramp_2": 5520,
+    "ramp_3": 5520,
+    "sustain": 11032,
+    "cooldown": 5520,
+    "post_test": 276
+  },
+  "per_metric_data_point_counts": {
+    "cpu_usage_go": 1692,
+    "cpu_usage_spring": 1691,
+    "db_connections_active": 1691,
+    "db_connections_pending": 1691,
+    "error_rate_spring_rps": 564,
+    "gc_cycles_go_per_second": 1692,
+    "gc_pause_rate_go_seconds": 1692,
+    "gc_pause_rate_jvm_seconds": 2820,
+    "go_goroutines": 1692,
+    "go_sql_idle_connections": 1692,
+    "go_sql_in_use_connections": 1692,
+    "go_sql_open_connections": 1692,
+    "heap_memory_go_bytes": 1692,
+    "heap_memory_jvm_bytes": 5073,
+    "jvm_threads_live": 1691,
+    "jvm_total_memory_used_bytes": 1691,
+    "p99_latency_go_seconds": 1692,
+    "p99_latency_spring_seconds": 1692,
+    "rss_memory_go_bytes": 1692,
+    "throughput_go_rps": 1692,
+    "throughput_spring_rps": 1692
+  },
+  "output_files": {
+    "master_csv": "load-tests/results/multi_20260624_112045/run_2/metrics_master.csv",
+    "per_metric_csvs": {
+      "cpu_usage_go": "load-tests/results/multi_20260624_112045/run_2/by_metric/cpu_usage_go.csv",
+      "cpu_usage_spring": "load-tests/results/multi_20260624_112045/run_2/by_metric/cpu_usage_spring.csv",
+      "db_connections_active": "load-tests/results/multi_20260624_112045/run_2/by_metric/db_connections_active.csv",
+      "db_connections_pending": "load-tests/results/multi_20260624_112045/run_2/by_metric/db_connections_pending.csv",
+      "error_rate_spring_rps": "load-tests/results/multi_20260624_112045/run_2/by_metric/error_rate_spring_rps.csv",
+      "gc_cycles_go_per_second": "load-tests/results/multi_20260624_112045/run_2/by_metric/gc_cycles_go_per_second.csv",
+      "gc_pause_rate_go_seconds": "load-tests/results/multi_20260624_112045/run_2/by_metric/gc_pause_rate_go_seconds.csv",
+      "gc_pause_rate_jvm_seconds": "load-tests/results/multi_20260624_112045/run_2/by_metric/gc_pause_rate_jvm_seconds.csv",
+      "go_goroutines": "load-tests/results/multi_20260624_112045/run_2/by_metric/go_goroutines.csv",
+      "go_sql_idle_connections": "load-tests/results/multi_20260624_112045/run_2/by_metric/go_sql_idle_connections.csv",
+      "go_sql_in_use_connections": "load-tests/results/multi_20260624_112045/run_2/by_metric/go_sql_in_use_connections.csv",
+      "go_sql_open_connections": "load-tests/results/multi_20260624_112045/run_2/by_metric/go_sql_open_connections.csv",
+      "heap_memory_go_bytes": "load-tests/results/multi_20260624_112045/run_2/by_metric/heap_memory_go_bytes.csv",
+      "heap_memory_jvm_bytes": "load-tests/results/multi_20260624_112045/run_2/by_metric/heap_memory_jvm_bytes.csv",
+      "jvm_threads_live": "load-tests/results/multi_20260624_112045/run_2/by_metric/jvm_threads_live.csv",
+      "jvm_total_memory_used_bytes": "load-tests/results/multi_20260624_112045/run_2/by_metric/jvm_total_memory_used_bytes.csv",
+      "p99_latency_go_seconds": "load-tests/results/multi_20260624_112045/run_2/by_metric/p99_latency_go_seconds.csv",
+      "p99_latency_spring_seconds": "load-tests/results/multi_20260624_112045/run_2/by_metric/p99_latency_spring_seconds.csv",
+      "rss_memory_go_bytes": "load-tests/results/multi_20260624_112045/run_2/by_metric/rss_memory_go_bytes.csv",
+      "throughput_go_rps": "load-tests/results/multi_20260624_112045/run_2/by_metric/throughput_go_rps.csv",
+      "throughput_spring_rps": "load-tests/results/multi_20260624_112045/run_2/by_metric/throughput_spring_rps.csv"
+    }
+  }
+}
